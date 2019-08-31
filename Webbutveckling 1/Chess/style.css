@@ -43,3 +43,7 @@ div
 .clicked {
     background-color: rgba(152,152,152,0.2);
 }
+
+.available {
+    background-color: red;
+}
