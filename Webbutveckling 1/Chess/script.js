@@ -39,7 +39,7 @@ let black_pawns = [new chess_piece("Black", "Pawn", "A"), new chess_piece("Black
 
 
 
-var piece_positions = [
+let piece_positions = [
 						[white_rook_a, white_knight_b, white_bishop_c, white_king, white_queen, white_bishop_f, white_knight_g, white_rook_h],
 					   	[white_pawns[0], white_pawns[1], white_pawns[2], white_pawns[3], white_pawns[4], white_pawns[5], white_pawns[6], white_pawns[7]],
 					   	["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
@@ -67,13 +67,13 @@ for (let y=0; y < piece_positions.length; y++)
 }
 
 function move_piece(current_pos, move_pos){
-	let piece = piece_positions[current_pos[0]][current_pos[1]];
-	let legal_moves = available_moves(piece.piece, piece.position, piece_positions);
 	let legal = false;
 	move_pos[0] = parseInt(move_pos[0], 10);
 	move_pos[1] = parseInt(move_pos[1], 10);
+	let piece = piece_positions[current_pos[0]][current_pos[1]];
+	let legal_moves = available_moves(piece.piece, piece.position, piece_positions, piece.color);
 
-	for (var i = 0; i < legal_moves.length; i++) {
+	for (let i = 0; i < legal_moves.length; i++) {
 		if (legal_moves[i].equals(move_pos)) {
 			console.log('Legal move');
 			legal = true;
@@ -93,6 +93,7 @@ function move_piece(current_pos, move_pos){
 	piece_positions[move_pos[0]][move_pos[1]].position = temp2;
 	piece_positions[move_pos[0]][move_pos[1]] = temp;
 
+	//Refresh board to have all pieces show correct positions
 	refresh_board()
 	}
 	else {
@@ -102,32 +103,21 @@ function move_piece(current_pos, move_pos){
 }
 
 function clicked_piece(td){
-	
 
-	if (document.getElementsByClassName('clicked first').length === 1){
-		td.classList.add("clicked");
-		td.classList.add("second");
-	}
-	
-	else{
+
+
+	//If player has not yet clicked and there are legal moves for the piece clicked on
+	if (document.getElementsByClassName('clicked first').length != 1) {
 		let piece = piece_positions[td.id.split(",")[0]][td.id.split(",")[1]];
-		let legal_moves = available_moves(piece.piece, piece.position, piece_positions);
-		console.log(legal_moves)
-		if(legal_moves.length > 0)
-		{
+		let legal_moves = available_moves(piece.piece, piece.position, piece_positions, piece.color);
+		if (legal_moves.length > 0) {
+			td.classList.add("clicked");
+			td.classList.add("first");
 
-		
-		td.classList.add("clicked");
-		td.classList.add("first");
-		
-		//add class to all available squares to move to
-		//Very poor code, remove or fix later
-
-
-
+			//Add all available moves to the board
 			for (let i = 1; i < 9; i++) {
 			    for (let j = 1; j < 9; j++) {
-			    	for (var k = 0; k < legal_moves.length; k++) {
+			    	for (let k = 0; k < legal_moves.length; k++) {
 				    	if (legal_moves[k].equals([i-1, j-1])) {
 				    	let current_tile = document.getElementById([i-1, j-1]);
 				    	current_tile.classList.add('available');
@@ -137,24 +127,22 @@ function clicked_piece(td){
 			}
 		}
 	}
+	
 
-	if (document.getElementsByClassName('clicked').length === 2){
-		let first_element = document.getElementsByClassName('clicked first')[0];
+	//Otherwise this is the second click
+	else {
+
+		td.classList.add("clicked");
+		td.classList.add("second");
+		
 		let second_element = document.getElementsByClassName('clicked second')[0];
-
-
-/*  		
-		first_element.classList.remove("clicked");
-  		first_element.classList.remove("first");
-
-		second_element.classList.remove("clicked");
-		second_element.classList.remove("second");
-
-*/
+		let first_element = document.getElementsByClassName('clicked first')[0];
+		//Refresh board to remove all excess classes
 		refresh_board()
 		move_piece(first_element.id.split(","), second_element.id.split(","));
 	}
 }
+
 
 
 function refresh_board(){
@@ -196,10 +184,14 @@ function create_board(){
 
 
 
-function available_moves(piece, position, board){
+function available_moves(piece, position, board, color){
 	let available_moves = [];
-	
-	if (piece == "Rook") {
+	if (piece == "Empty")
+	{
+		return available_moves;
+	}
+
+	if (piece == "Rook" || piece == "Queen") {
 
 		for (let x = 0; x < 8; x++) {
 			for (let y = 0; y < 8; y++) {
@@ -217,30 +209,12 @@ function available_moves(piece, position, board){
 		}
 	}
 
-	if (piece == "Knight") {
-		let moves = [
-		[2, 1], [-2, 1], [2, -1], [-2, -1], [1, 2], [-1, 2], [1, -2], [-1, -2]
-		];
-		for (var i = 0; i < moves.length; i++) {
-			testing_pos = [...position];
-
-			testing_pos[0] += moves[i][0];
-			testing_pos[1] += moves[i][1];
-
-			if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
-				if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
-					available_moves.push(testing_pos);
-				}
-			}
-		}
-	}
-
-	if (piece == "Bishop") {
+	if (piece == "Bishop" || piece == "Queen") {
 		let moves = [
 		[1, 1], [-1, 1], [1, -1], [-1, -1]
 		]
 
-		for (var i = 0; i < moves.length; i++) {
+		for (let i = 0; i < moves.length; i++) {
 			let testing_pos = [...position];
 			while (true) {
 
@@ -264,11 +238,11 @@ function available_moves(piece, position, board){
 		}
 	}
 
-	if (piece == "King") {
+	else if (piece == "Knight") {
 		let moves = [
-		[1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]
-		]
-		for (var i = 0; i < moves.length; i++) {
+		[2, 1], [-2, 1], [2, -1], [-2, -1], [1, 2], [-1, 2], [1, -2], [-1, -2]
+		];
+		for (let i = 0; i < moves.length; i++) {
 			testing_pos = [...position];
 
 			testing_pos[0] += moves[i][0];
@@ -280,7 +254,42 @@ function available_moves(piece, position, board){
 				}
 			}
 		}
+	}
 
+	else if (piece == "King") {
+		let moves = [
+		[1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]
+		]
+		for (let i = 0; i < moves.length; i++) {
+			testing_pos = [...position];
+
+			testing_pos[0] += moves[i][0];
+			testing_pos[1] += moves[i][1];
+
+			if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
+				if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
+					available_moves.push(testing_pos);
+				}
+			}
+		}
+	}
+
+	else if (piece == "Pawn")
+	{
+
+		testing_pos = [...position];
+		if (color == "White")
+		{
+			testing_pos[0] += 1;
+		}
+		else {
+			testing_pos[0] -= 1;
+		}
+		if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
+			if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
+				available_moves.push(testing_pos);
+			}
+		}
 	}
 
 	return available_moves
@@ -303,7 +312,7 @@ Array.prototype.equals = function (array) {
     if (this.length != array.length)
         return false;
 
-    for (var i = 0, l=this.length; i < l; i++) {
+    for (let i = 0, l=this.length; i < l; i++) {
         // Check if we have nested arrays
         if (this[i] instanceof Array && array[i] instanceof Array) {
             // recurse into the nested arrays
