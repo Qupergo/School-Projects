@@ -280,9 +280,16 @@ function available_moves(piece, position, board, color){
 		testing_pos = [...position];
 		if (color == "White")
 		{
+			//if Pawn is still in starting position an extra step can be taken
+			if (position[0] === 1) {
+					available_moves.push([testing_pos[0]+2, testing_pos[1]])
+				}
 			testing_pos[0] += 1;
 		}
 		else {
+			if (position[0] === 6) {
+					available_moves.push([testing_pos[0]-2, testing_pos[1]])
+				}
 			testing_pos[0] -= 1;
 		}
 		if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
