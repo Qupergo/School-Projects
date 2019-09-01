@@ -1,8 +1,5 @@
-
-
-
 class chess_piece {
-  constructor(color, piece, starting_square, position=[0,0]) {
+  constructor(color, piece, starting_square, position=[0,0], starting_position=[0,0]) {
     this.color = color;
     this.piece = piece
     this.identifier = starting_square
@@ -10,7 +7,7 @@ class chess_piece {
   }
 }
 
-let chess_piece_url = "Purple_Blue/"
+let chess_piece_url = "Classic/"
 
 //White pieces
 let white_rook_a = new chess_piece("White", "Rook", "A");
@@ -36,20 +33,18 @@ let black_king = new chess_piece("Black", "King", "D");
 let black_queen = new chess_piece("Black", "Queen", "E");
 let black_pawns = [new chess_piece("Black", "Pawn", "A"), new chess_piece("Black", "Pawn", "B"), new chess_piece("Black", "Pawn", "C"), new chess_piece("Black", "Pawn", "D"), new chess_piece("Black", "Pawn", "E"), new chess_piece("Black", "Pawn", "F"), new chess_piece("Black", "Pawn", "G"), new chess_piece("Black", "Pawn", "G")];
 
-
-
-
 let piece_positions = [
-						[white_rook_a, white_knight_b, white_bishop_c, white_king, white_queen, white_bishop_f, white_knight_g, white_rook_h],
-					   	[white_pawns[0], white_pawns[1], white_pawns[2], white_pawns[3], white_pawns[4], white_pawns[5], white_pawns[6], white_pawns[7]],
+						[black_rook_a, black_knight_b, black_bishop_c, black_king, black_queen, black_bishop_f, black_knight_g, black_rook_h],
+						[black_pawns[0], black_pawns[1], black_pawns[2], black_pawns[3], black_pawns[4], black_pawns[5], black_pawns[6], black_pawns[7]],
 					   	["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
 						["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
 						["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
 						["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
-						[black_pawns[0], black_pawns[1], black_pawns[2], black_pawns[3], black_pawns[4], black_pawns[5], black_pawns[6], black_pawns[7]],
-						[black_rook_a, black_knight_b, black_bishop_c, black_king, black_queen, black_bishop_f, black_knight_g, black_rook_h]
+					   	[white_pawns[0], white_pawns[1], white_pawns[2], white_pawns[3], white_pawns[4], white_pawns[5], white_pawns[6], white_pawns[7]],
+						[white_rook_a, white_knight_b, white_bishop_c, white_king, white_queen, white_bishop_f, white_knight_g, white_rook_h],
 						];
 
+let move_history = []
 
 //Replacing "Empty" with chess_piece class to save position for swapping
 for (let y=0; y < piece_positions.length; y++)
@@ -58,10 +53,11 @@ for (let y=0; y < piece_positions.length; y++)
 	{
 		if (piece_positions[y][x] == "Empty")
 		{
-			piece_positions[y][x] = new chess_piece("None", "Empty", "None", [y, x])
+			piece_positions[y][x] = new chess_piece("None", "Empty", "None", [y, x], [y, x])
 		}
 		else {
 			piece_positions[y][x].position = [y, x]
+			piece_positions[y][x].starting_position = [y, x]
 		}
 	}
 }
@@ -71,7 +67,7 @@ function move_piece(current_pos, move_pos){
 	move_pos[0] = parseInt(move_pos[0], 10);
 	move_pos[1] = parseInt(move_pos[1], 10);
 	let piece = piece_positions[current_pos[0]][current_pos[1]];
-	let legal_moves = available_moves(piece.piece, piece.position, piece_positions, piece.color);
+	let legal_moves = available_moves(piece.piece, piece.position, piece_positions, piece.color, piece.starting_position);
 
 	for (let i = 0; i < legal_moves.length; i++) {
 		if (legal_moves[i].equals(move_pos)) {
@@ -95,6 +91,8 @@ function move_piece(current_pos, move_pos){
 
 	//Refresh board to have all pieces show correct positions
 	refresh_board()
+	move_history.push([temp.color, temp.piece, temp.color + " " + temp.piece + " moved to " + move_pos])
+	console.log(move_history)
 	}
 	else {
 		console.log("Illegal move!")
@@ -102,14 +100,12 @@ function move_piece(current_pos, move_pos){
 
 }
 
-function clicked_piece(td){
-
-
+function clicked_piece(td) {
 
 	//If player has not yet clicked and there are legal moves for the piece clicked on
 	if (document.getElementsByClassName('clicked first').length != 1) {
 		let piece = piece_positions[td.id.split(",")[0]][td.id.split(",")[1]];
-		let legal_moves = available_moves(piece.piece, piece.position, piece_positions, piece.color);
+		let legal_moves = available_moves(piece.piece, piece.position, piece_positions, piece.color, piece.starting_position);
 		if (legal_moves.length > 0) {
 			td.classList.add("clicked");
 			td.classList.add("first");
@@ -146,15 +142,19 @@ function clicked_piece(td){
 
 
 function refresh_board(){
-	for (let i = 1; i < 9; i++) {
-	    for (let j = 1; j < 9; j++) {
-	    	let current_tile = document.getElementById([i-1, j-1])
-	    	current_tile.style.backgroundImage = `url('ChessPieceImages/${chess_piece_url}${piece_positions[i-1][j-1].color}_${piece_positions[i-1][j-1].piece}.png')`
-	    	if (i%2 == j%2) {
+	for (let y = 0; y < 8; y++) {
+	    for (let x = 0; x < 8; x++) {
+	    	let current_tile = document.getElementById([y, x])
+	    	current_tile.style.backgroundImage = `url('ChessPieceImages/${chess_piece_url}${piece_positions[y][x].color}_${piece_positions[y][x].piece}.png')`
+	    	if (y%2 == x%2) {
 	            current_tile.className = "white";
 	        } else {
 	            current_tile.className = "black";
 	        }
+	        
+	        if (piece_positions[y][x] == "Empty") {
+				piece_positions[y][x] = new chess_piece("None", "Empty", "None", [y, x], [y, x]);
+			}
 	    }
 	}
 }
@@ -184,8 +184,9 @@ function create_board(){
 
 
 
-function available_moves(piece, position, board, color){
+function available_moves(piece, position, board, color, starting_position){
 	let available_moves = [];
+
 	if (piece == "Empty")
 	{
 		return available_moves;
@@ -193,17 +194,37 @@ function available_moves(piece, position, board, color){
 
 	if (piece == "Rook" || piece == "Queen") {
 
-		for (let x = 0; x < 8; x++) {
-			for (let y = 0; y < 8; y++) {
+		let moves = [
+		[1, 0], [-1, 0], [0, -1], [0, 1]
+		]
 
-				
-				if (position[0] == x && position[1] != y) {
-					console.log('Test')
-					available_moves.push([x, y]);
+		for (let i = 0; i < moves.length; i++) {
+			let testing_pos = [...position];
+			while (true) {
+
+				testing_pos[0] += moves[i][0];
+				testing_pos[1] += moves[i][1];
+				if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
+					if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
+
+						let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
+						if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
+							break
+						}
+
+						legal_move = [...testing_pos];
+						available_moves.push(legal_move);
+						if (piece_at_position.piece != "Empty" && color != piece_at_position.color)
+						{
+							break
+						}
+					}
+					else {
+						break;
+					}
 				}
-				if (position[0] != x && position[1] == y) {
-					available_moves.push([x, y]);
-					console.log('Test')
+				else {
+					break;
 				}
 			}
 		}
@@ -220,19 +241,30 @@ function available_moves(piece, position, board, color){
 
 				testing_pos[0] += moves[i][0];
 				testing_pos[1] += moves[i][1];
-				console.log(position)
-				console.log(testing_pos)
+
+				
+
 				if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
 					if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
-						legal_move = [...testing_pos]
+						let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
+						if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
+							break
+						}
+						legal_move = [...testing_pos];
 						available_moves.push(legal_move);
+
+						if (piece_at_position.piece != "Empty" && color != piece_at_position.color )
+						{
+							break
+						}
+
 					}
 					else {
-						break
+						break;
 					}
 				}
 				else {
-					break
+					break;
 				}
 			}
 		}
@@ -248,9 +280,14 @@ function available_moves(piece, position, board, color){
 			testing_pos[0] += moves[i][0];
 			testing_pos[1] += moves[i][1];
 
-			if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
-				if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
-					available_moves.push(testing_pos);
+
+				if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
+					if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
+						let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
+						
+						if (piece_at_position.piece == "Empty" || color != piece_at_position.color) {
+						available_moves.push(testing_pos);
+					}
 				}
 			}
 		}
@@ -278,20 +315,29 @@ function available_moves(piece, position, board, color){
 	{
 
 		testing_pos = [...position];
-		if (color == "White")
+
+		const moves = [1, 2]
+		const capture_moves = [[-1, -1], [-1, 1]]
+
+		//If pawn started at lower part of board subtraction to move up
+		if (starting_position[0] === 6)
 		{
 			//if Pawn is still in starting position an extra step can be taken
-			if (position[0] === 1) {
-					available_moves.push([testing_pos[0]+2, testing_pos[1]])
+			if (position[0] === starting_position[0]) {
+					available_moves.push([testing_pos[0]-moves[1], testing_pos[1]]);
 				}
-			testing_pos[0] += 1;
+			testing_pos[0] -= moves[0];
 		}
+
+		//Otherwise the pawn started at the upper part of the board so addition to move down
 		else {
-			if (position[0] === 6) {
-					available_moves.push([testing_pos[0]-2, testing_pos[1]])
+			//if Pawn is still in starting position an extra step can be taken
+			if (position[0] === starting_position[0]) {
+					available_moves.push([testing_pos[0] + moves[1], testing_pos[1]]);
 				}
-			testing_pos[0] -= 1;
+			testing_pos[0] += moves[0];
 		}
+
 		if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
 			if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
 				available_moves.push(testing_pos);
@@ -299,7 +345,15 @@ function available_moves(piece, position, board, color){
 		}
 	}
 
-	return available_moves
+	//Remove all moves where piece moves into it's own colors pieces
+	for (let i = 0; i < available_moves.length; i++) {
+		piece_at_position = piece_positions[available_moves[i][0]][available_moves[i][1]]
+		if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
+			available_moves[i] = []
+		}
+	}
+
+	return available_moves;
 
 }
 
@@ -335,4 +389,3 @@ Array.prototype.equals = function (array) {
 }
 // Hide method from for-in loops
 Object.defineProperty(Array.prototype, "equals", {enumerable: false});
-
