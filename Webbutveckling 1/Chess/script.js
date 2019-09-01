@@ -97,7 +97,6 @@ function move_piece(current_pos, move_pos){
 	else {
 		console.log("Illegal move!")
 	}
-
 }
 
 function clicked_piece(td) {
@@ -186,122 +185,158 @@ function create_board(){
 
 function available_moves(piece, position, board, color, starting_position){
 	let available_moves = [];
+	//Check if piece whose turn it is is trying to move or if it is the first turn
+	if (move_history.length === 0 && color == "White" || color != move_history[move_history.length - 1][0]) {
+		if (piece == "Empty")
+		{
+			return available_moves;
+		}
 
-	if (piece == "Empty")
-	{
-		return available_moves;
-	}
+		if (piece == "Rook" || piece == "Queen") {
 
-	if (piece == "Rook" || piece == "Queen") {
+			let moves = [
+			[1, 0], [-1, 0], [0, -1], [0, 1]
+			]
 
-		let moves = [
-		[1, 0], [-1, 0], [0, -1], [0, 1]
-		]
+			for (let i = 0; i < moves.length; i++) {
+				let testing_pos = [...position];
+				while (true) {
 
-		for (let i = 0; i < moves.length; i++) {
-			let testing_pos = [...position];
-			while (true) {
+					testing_pos[0] += moves[i][0];
+					testing_pos[1] += moves[i][1];
+					if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
+						if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
 
-				testing_pos[0] += moves[i][0];
-				testing_pos[1] += moves[i][1];
-				if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
-					if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
+							let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
+							if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
+								break
+							}
 
-						let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
-						if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
-							break
+							legal_move = [...testing_pos];
+							available_moves.push(legal_move);
+							if (piece_at_position.piece != "Empty" && color != piece_at_position.color)
+							{
+								break
+							}
 						}
-
-						legal_move = [...testing_pos];
-						available_moves.push(legal_move);
-						if (piece_at_position.piece != "Empty" && color != piece_at_position.color)
-						{
-							break
+						else {
+							break;
 						}
 					}
 					else {
 						break;
 					}
 				}
-				else {
-					break;
-				}
 			}
 		}
-	}
 
-	if (piece == "Bishop" || piece == "Queen") {
-		let moves = [
-		[1, 1], [-1, 1], [1, -1], [-1, -1]
-		]
+		if (piece == "Bishop" || piece == "Queen") {
+			let moves = [
+			[1, 1], [-1, 1], [1, -1], [-1, -1]
+			]
 
-		for (let i = 0; i < moves.length; i++) {
-			let testing_pos = [...position];
-			while (true) {
+			for (let i = 0; i < moves.length; i++) {
+				let testing_pos = [...position];
+				while (true) {
 
-				testing_pos[0] += moves[i][0];
-				testing_pos[1] += moves[i][1];
+					testing_pos[0] += moves[i][0];
+					testing_pos[1] += moves[i][1];
 
-				
+					
 
-				if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
-					if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
-						let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
-						if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
-							break
+					if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
+						if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
+							let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
+							if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
+								break
+							}
+							legal_move = [...testing_pos];
+							available_moves.push(legal_move);
+
+							if (piece_at_position.piece != "Empty" && color != piece_at_position.color )
+							{
+								break
+							}
+
 						}
-						legal_move = [...testing_pos];
-						available_moves.push(legal_move);
-
-						if (piece_at_position.piece != "Empty" && color != piece_at_position.color )
-						{
-							break
+						else {
+							break;
 						}
-
 					}
 					else {
 						break;
 					}
 				}
-				else {
-					break;
+			}
+		}
+
+		else if (piece == "Knight") {
+			let moves = [
+			[2, 1], [-2, 1], [2, -1], [-2, -1], [1, 2], [-1, 2], [1, -2], [-1, -2]
+			];
+			for (let i = 0; i < moves.length; i++) {
+				testing_pos = [...position];
+
+				testing_pos[0] += moves[i][0];
+				testing_pos[1] += moves[i][1];
+
+
+					if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
+						if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
+							let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
+							
+							if (piece_at_position.piece == "Empty" || color != piece_at_position.color) {
+							available_moves.push(testing_pos);
+						}
+					}
 				}
 			}
 		}
-	}
 
-	else if (piece == "Knight") {
-		let moves = [
-		[2, 1], [-2, 1], [2, -1], [-2, -1], [1, 2], [-1, 2], [1, -2], [-1, -2]
-		];
-		for (let i = 0; i < moves.length; i++) {
-			testing_pos = [...position];
+		else if (piece == "King") {
+			let moves = [
+			[1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]
+			]
+			for (let i = 0; i < moves.length; i++) {
+				testing_pos = [...position];
 
-			testing_pos[0] += moves[i][0];
-			testing_pos[1] += moves[i][1];
-
+				testing_pos[0] += moves[i][0];
+				testing_pos[1] += moves[i][1];
 
 				if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
 					if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
-						let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
-						
-						if (piece_at_position.piece == "Empty" || color != piece_at_position.color) {
 						available_moves.push(testing_pos);
 					}
 				}
 			}
 		}
-	}
 
-	else if (piece == "King") {
-		let moves = [
-		[1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]
-		]
-		for (let i = 0; i < moves.length; i++) {
+		else if (piece == "Pawn")
+		{
+
 			testing_pos = [...position];
 
-			testing_pos[0] += moves[i][0];
-			testing_pos[1] += moves[i][1];
+			const moves = [1, 2]
+			const capture_moves = [[-1, -1], [-1, 1]]
+
+			//If pawn started at lower part of board subtraction to move up
+			if (starting_position[0] === 6)
+			{
+				//if Pawn is still in starting position an extra step can be taken
+				if (position[0] === starting_position[0]) {
+						available_moves.push([testing_pos[0]-moves[1], testing_pos[1]]);
+					}
+				testing_pos[0] -= moves[0];
+			}
+
+			//Otherwise the pawn started at the upper part of the board so addition to move down
+			else {
+				//if Pawn is still in starting position an extra step can be taken
+				if (position[0] === starting_position[0]) {
+						available_moves.push([testing_pos[0] + moves[1], testing_pos[1]]);
+					}
+				testing_pos[0] += moves[0];
+			}
 
 			if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
 				if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
@@ -309,50 +344,15 @@ function available_moves(piece, position, board, color, starting_position){
 				}
 			}
 		}
-	}
 
-	else if (piece == "Pawn")
-	{
-
-		testing_pos = [...position];
-
-		const moves = [1, 2]
-		const capture_moves = [[-1, -1], [-1, 1]]
-
-		//If pawn started at lower part of board subtraction to move up
-		if (starting_position[0] === 6)
-		{
-			//if Pawn is still in starting position an extra step can be taken
-			if (position[0] === starting_position[0]) {
-					available_moves.push([testing_pos[0]-moves[1], testing_pos[1]]);
-				}
-			testing_pos[0] -= moves[0];
-		}
-
-		//Otherwise the pawn started at the upper part of the board so addition to move down
-		else {
-			//if Pawn is still in starting position an extra step can be taken
-			if (position[0] === starting_position[0]) {
-					available_moves.push([testing_pos[0] + moves[1], testing_pos[1]]);
-				}
-			testing_pos[0] += moves[0];
-		}
-
-		if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
-			if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
-				available_moves.push(testing_pos);
+		//Remove all moves where piece moves into it's own colors pieces
+		for (let i = 0; i < available_moves.length; i++) {
+			piece_at_position = piece_positions[available_moves[i][0]][available_moves[i][1]]
+			if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
+				available_moves[i] = []
 			}
 		}
 	}
-
-	//Remove all moves where piece moves into it's own colors pieces
-	for (let i = 0; i < available_moves.length; i++) {
-		piece_at_position = piece_positions[available_moves[i][0]][available_moves[i][1]]
-		if (piece_at_position.piece != "Empty" && color == piece_at_position.color) {
-			available_moves[i] = []
-		}
-	}
-
 	return available_moves;
 
 }
