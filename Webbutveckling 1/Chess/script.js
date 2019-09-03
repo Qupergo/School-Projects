@@ -20,8 +20,6 @@ let white_king = new chess_piece("White", "King", "D");
 let white_queen = new chess_piece("White", "Queen", "E");
 let white_pawns = [new chess_piece("White", "Pawn", "A"), new chess_piece("White", "Pawn", "B"), new chess_piece("White", "Pawn", "C"), new chess_piece("White", "Pawn", "D"), new chess_piece("White", "Pawn", "E"), new chess_piece("White", "Pawn", "F"), new chess_piece("White", "Pawn", "G"), new chess_piece("White", "Pawn", "G")];
 
-
-
 //Black pieces
 let black_rook_a = new chess_piece("Black", "Rook", "A");
 let black_rook_h = new chess_piece("Black", "Rook", "H");
@@ -34,25 +32,26 @@ let black_queen = new chess_piece("Black", "Queen", "E");
 let black_pawns = [new chess_piece("Black", "Pawn", "A"), new chess_piece("Black", "Pawn", "B"), new chess_piece("Black", "Pawn", "C"), new chess_piece("Black", "Pawn", "D"), new chess_piece("Black", "Pawn", "E"), new chess_piece("Black", "Pawn", "F"), new chess_piece("Black", "Pawn", "G"), new chess_piece("Black", "Pawn", "G")];
 
 let piece_positions = [
-						[black_rook_a, black_knight_b, black_bishop_c, black_king, black_queen, black_bishop_f, black_knight_g, black_rook_h],
-						[black_pawns[0], black_pawns[1], black_pawns[2], black_pawns[3], black_pawns[4], black_pawns[5], black_pawns[6], black_pawns[7]],
-					   	["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
-						["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
-						["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
-						["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
-					   	[white_pawns[0], white_pawns[1], white_pawns[2], white_pawns[3], white_pawns[4], white_pawns[5], white_pawns[6], white_pawns[7]],
-						[white_rook_a, white_knight_b, white_bishop_c, white_king, white_queen, white_bishop_f, white_knight_g, white_rook_h],
-						];
+					[black_rook_a, black_knight_b, black_bishop_c, black_queen, black_king, black_bishop_f, black_knight_g, black_rook_h],
+					[black_pawns[0], black_pawns[1], black_pawns[2], black_pawns[3], black_pawns[4], black_pawns[5], black_pawns[6], black_pawns[7]],
+				   	["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
+					["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
+					["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
+					["Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty", "Empty"],
+				   	[white_pawns[0], white_pawns[1], white_pawns[2], white_pawns[3], white_pawns[4], white_pawns[5], white_pawns[6], white_pawns[7]],
+					[white_rook_a, white_knight_b, white_bishop_c, white_queen, white_king, white_bishop_f, white_knight_g, white_rook_h],
+					];
 
 let move_history = []
 
+
 //Replacing "Empty" with chess_piece class to save position for swapping
-for (let y=0; y < piece_positions.length; y++)
+for (let y = 0; y < piece_positions.length; y++)
 {
-	for (let x=0; x < piece_positions[y].length; x++)
+	console.log(y)
+	for (let x = 0; x < piece_positions[y].length; x++)
 	{
-		if (piece_positions[y][x] == "Empty")
-		{
+		if (piece_positions[y][x] == "Empty") {
 			piece_positions[y][x] = new chess_piece("None", "Empty", "None", [y, x], [y, x])
 		}
 		else {
@@ -79,20 +78,32 @@ function move_piece(current_pos, move_pos){
 
 	if (legal)
 	{
-	//After confirming the move is legal
-	let temp = [...piece_positions][current_pos[0]][current_pos[1]];
-	let temp2 = piece_positions[current_pos[0]][current_pos[1]].position;
+		//After confirming the move is legal
+		let temp = [...piece_positions][current_pos[0]][current_pos[1]];
+		let temp2 = piece_positions[current_pos[0]][current_pos[1]].position;
 
-	piece_positions[current_pos[0]][current_pos[1]].position = piece_positions[move_pos[0]][move_pos[1]].position;
-	piece_positions[current_pos[0]][current_pos[1]] = piece_positions[move_pos[0]][move_pos[1]];
+		//Move current piece to the movement target square
+		piece_positions[current_pos[0]][current_pos[1]].position = piece_positions[move_pos[0]][move_pos[1]].position;
+		piece_positions[current_pos[0]][current_pos[1]] = piece_positions[move_pos[0]][move_pos[1]];
 
-	piece_positions[move_pos[0]][move_pos[1]].position = temp2;
-	piece_positions[move_pos[0]][move_pos[1]] = temp;
 
-	//Refresh board to have all pieces show correct positions
-	refresh_board()
-	move_history.push([temp.color, temp.piece, temp.color + " " + temp.piece + " moved to " + move_pos])
-	console.log(move_history)
+		//Swaping move_pos with previous position
+		piece_positions[move_pos[0]][move_pos[1]].position = temp2;
+		piece_positions[move_pos[0]][move_pos[1]] = temp;
+		
+		//If move is a capture
+		if (piece_positions[move_pos[0]][move_pos[1]].piece != "Empty") {
+
+			//Replace the other piece with a new empty piece
+			piece_positions[current_pos[0]][current_pos[1]].position = temp2;
+			piece_positions[current_pos[0]][current_pos[1]] = new chess_piece("None", "Empty", "None", temp2, temp2);
+			//Add this to captured pieces
+		}
+
+		//Refresh board to have all pieces show correct positions
+		refresh_board()
+		move_history.push([temp.color, temp.piece, temp.color + " " + temp.piece + " moved to " + move_pos])
+		console.log(move_history)
 	}
 	else {
 		console.log("Illegal move!")
@@ -100,8 +111,8 @@ function move_piece(current_pos, move_pos){
 }
 
 function clicked_piece(td) {
-
-	//If player has not yet clicked and there are legal moves for the piece clicked on
+	console.log(td.id)
+	//If player has not yet clicked
 	if (document.getElementsByClassName('clicked first').length != 1) {
 		let piece = piece_positions[td.id.split(",")[0]][td.id.split(",")[1]];
 		let legal_moves = available_moves(piece.piece, piece.position, piece_positions, piece.color, piece.starting_position);
@@ -109,7 +120,7 @@ function clicked_piece(td) {
 			td.classList.add("clicked");
 			td.classList.add("first");
 
-			//Add all available moves to the board
+			//Add all available moves to the board for display
 			for (let i = 1; i < 9; i++) {
 			    for (let j = 1; j < 9; j++) {
 			    	for (let k = 0; k < legal_moves.length; k++) {
@@ -167,7 +178,7 @@ function create_board(){
 	        let td = document.createElement('td');
 	        td.id = [i-1, j-1];
 	        td.style.backgroundImage = `url('ChessPieceImages/${chess_piece_url}${piece_positions[i-1][j-1].color}_${piece_positions[i-1][j-1].piece}.png')`
-	        console.log('Chess/' + piece_positions[i-1][j-1].color + "_" + piece_positions[i-1][j-1].piece)
+			console.log('Chess/' + piece_positions[i-1][j-1].color + "_" + piece_positions[i-1][j-1].piece)
 			td.addEventListener('click', function() {clicked_piece(this)});
 	        if (i%2 == j%2) {
 	            td.className = "white";
@@ -183,7 +194,8 @@ function create_board(){
 
 
 
-function available_moves(piece, position, board, color, starting_position){
+function available_moves(piece, position, board, color, starting_position) {
+	console.log(position);
 	let available_moves = [];
 	//Check if piece whose turn it is is trying to move or if it is the first turn
 	if (move_history.length === 0 && color == "White" || color != move_history[move_history.length - 1][0]) {
@@ -241,8 +253,6 @@ function available_moves(piece, position, board, color, starting_position){
 
 					testing_pos[0] += moves[i][0];
 					testing_pos[1] += moves[i][1];
-
-					
 
 					if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
 						if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
@@ -316,31 +326,41 @@ function available_moves(piece, position, board, color, starting_position){
 
 			testing_pos = [...position];
 
-			const moves = [1, 2]
-			const capture_moves = [[-1, -1], [-1, 1]]
+			let moves = [1, 2]
+			let capture_moves = [[1, 1], [1, -1]]
 
 			//If pawn started at lower part of board subtraction to move up
-			if (starting_position[0] === 6)
-			{
-				//if Pawn is still in starting position an extra step can be taken
-				if (position[0] === starting_position[0]) {
-						available_moves.push([testing_pos[0]-moves[1], testing_pos[1]]);
-					}
-				testing_pos[0] -= moves[0];
+			if (starting_position[0] === 6) {
+				moves[0] *= -1;
+				moves[1] *= -1;
+				for (let index = 0; index < capture_moves.length; index++) {
+					capture_moves[index][0] *= -1;
+					capture_moves[index][1] *= -1;
+				}
 			}
 
-			//Otherwise the pawn started at the upper part of the board so addition to move down
-			else {
-				//if Pawn is still in starting position an extra step can be taken
-				if (position[0] === starting_position[0]) {
-						available_moves.push([testing_pos[0] + moves[1], testing_pos[1]]);
-					}
-				testing_pos[0] += moves[0];
+
+			//if Pawn is still in starting position an extra step can be taken
+			if (position[0] === starting_position[0]) {
+				available_moves.push([testing_pos[0] + moves[1], testing_pos[1]]);
+			}
+			testing_pos[0] += moves[0];
+
+			for (let index = 0; index < capture_moves.length; index++) {
+
+				let piece_at_position = piece_positions[position[0] + capture_moves[index][0]][position[1] + capture_moves[index][1]]
+				if (piece_at_position.piece != "Empty" && color != piece_at_position.color) {
+					available_moves.push([position[0] + capture_moves[index][0], position[1] + capture_moves[index][1]])
+				}
 			}
 
 			if (testing_pos[0] < 8 && testing_pos[0] >= 0) {
 				if (testing_pos[1] < 8 && testing_pos[1] >= 0) {
-					available_moves.push(testing_pos);
+					let piece_at_position = piece_positions[testing_pos[0]][testing_pos[1]]
+							
+					if (piece_at_position.piece == "Empty") {
+						available_moves.push(testing_pos);
+					}
 				}
 			}
 		}
@@ -389,3 +409,5 @@ Array.prototype.equals = function (array) {
 }
 // Hide method from for-in loops
 Object.defineProperty(Array.prototype, "equals", {enumerable: false});
+
+create_board();
