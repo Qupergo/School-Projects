@@ -1,0 +1,19 @@
+.chart {
+    width: 400px;
+    height: 400px;
+    border: 1px solid black;
+}
+td {
+    padding: 80px;
+    padding-bottom: 75px;
+    border: 1px solid black;
+    background-size: cover;
+    background-repeat: none;
+}
+
+.super_effective {
+    background-color: springgreen;
+}
+.not_very_effective {
+    background-color: red;
+}

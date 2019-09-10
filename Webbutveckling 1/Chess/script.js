@@ -76,8 +76,7 @@ function move_piece(current_pos, move_pos){
 		}
 	}
 
-	if (legal)
-	{
+	if (legal) {
 		//After confirming the move is legal
 		let temp = [...piece_positions][current_pos[0]][current_pos[1]];
 		let temp2 = piece_positions[current_pos[0]][current_pos[1]].position;
@@ -85,7 +84,6 @@ function move_piece(current_pos, move_pos){
 		//Move current piece to the movement target square
 		piece_positions[current_pos[0]][current_pos[1]].position = piece_positions[move_pos[0]][move_pos[1]].position;
 		piece_positions[current_pos[0]][current_pos[1]] = piece_positions[move_pos[0]][move_pos[1]];
-
 
 		//Swaping move_pos with previous position
 		piece_positions[move_pos[0]][move_pos[1]].position = temp2;
@@ -97,7 +95,7 @@ function move_piece(current_pos, move_pos){
 			//Replace the other piece with a new empty piece
 			piece_positions[current_pos[0]][current_pos[1]].position = temp2;
 			piece_positions[current_pos[0]][current_pos[1]] = new chess_piece("None", "Empty", "None", temp2, temp2);
-			//Add this to captured pieces
+			//Add captured piece to captured_pieces
 		}
 
 		//Refresh board to have all pieces show correct positions

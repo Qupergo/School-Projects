@@ -1,0 +1,11 @@
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\bin\Debug\netcoreapp2.2\Programmering 1.deps.json
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\bin\Debug\netcoreapp2.2\Programmering 1.runtimeconfig.json
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\bin\Debug\netcoreapp2.2\Programmering 1.runtimeconfig.dev.json
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\bin\Debug\netcoreapp2.2\Programmering 1.dll
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\bin\Debug\netcoreapp2.2\Programmering 1.pdb
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\obj\Debug\netcoreapp2.2\Programmering 1.csprojAssemblyReference.cache
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\obj\Debug\netcoreapp2.2\Programmering 1.csproj.CoreCompileInputs.cache
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\obj\Debug\netcoreapp2.2\Programmering 1.AssemblyInfoInputs.cache
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\obj\Debug\netcoreapp2.2\Programmering 1.AssemblyInfo.cs
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\obj\Debug\netcoreapp2.2\Programmering 1.dll
+C:\Users\elev\Documents\GitHub\School-Projects\Programmering 1\obj\Debug\netcoreapp2.2\Programmering 1.pdb
