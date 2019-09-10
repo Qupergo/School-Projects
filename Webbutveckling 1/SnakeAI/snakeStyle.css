@@ -1,1 +1,4 @@
-canvas { background: #eee; }
+canvas { 
+    background: #eee;
+    border-radius: 1%;
+}

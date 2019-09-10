@@ -2,7 +2,6 @@ let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 
 
-
 grid_size = 8
 
 canvas.width = 50*grid_size
@@ -78,7 +77,6 @@ function drawSnake() {
             else if(snakePart[1] === 0-grid_size) {
                 snakePart[1] = canvas.height;
             }
-
             break;
         }
         snakePart[0] = snake[index - 1][0];
