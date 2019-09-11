@@ -79,6 +79,7 @@ canvas.height = size*grid_size
 
 let dx = grid_size;
 let dy = 0;
+let direction = "right";
 
 snake_amount = 8;
 
@@ -123,35 +124,43 @@ for (let index = 0; index < snake_amount-1; index++) {
 
 document.addEventListener("keypress", function onEvent(event) {
     if (event.key === "a") {
-        if (dx !== grid_size) {
-            dx = -grid_size
-            dy = 0
-        }
+        direction = "left";
     }
     else if (event.key === "d") {
-        if (dx !== -grid_size)
-        {
-            dx = grid_size
-            dy = 0
-        }
+        direction = "right";
     }
     else if (event.key === "w") {
-        if (dy !== grid_size)
-        {
-            dy = -grid_size
-            dx = 0
-        }
+        direction = "up";
     }
     else if (event.key === "s") {
-        if (dy !== -grid_size)
-        {
-            dy = grid_size
-            dx = 0
-        }
+        direction = "down";
     }
 });
 
 function draw() {
+
+    if (dx !== grid_size && direction == "left") {
+        dx = -grid_size
+        dy = 0
+    }
+    
+    if (dx !== -grid_size && direction == "right")
+    {
+        dx = grid_size
+        dy = 0
+    }
+
+    if (dy !== grid_size && direction == "up")
+    {
+        dy = -grid_size
+        dx = 0
+    }
+
+    if (dy !== -grid_size && direction == "down")
+    {
+        dy = grid_size
+        dx = 0
+    }
     for (let index = 0; index < snakes.length; index++) {
         current_snake = snakes[index];
         current_snake.ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -178,5 +187,86 @@ function getRandomColor() {
     }
     return color;
 }
+
+function sigmoid(x) {
+	return 1 / (1 + Math.exp(-input));
+}
+
+function dot_product(vector_x, vector_y) {
+    let weighted_sum = 0;
+    for (let index = 0; index < vector_x.length; index++) {
+        weighted_sum += vector_x[index] * vector_y[index];
+    }
+    return weighted_sum;
+}
+
+//Genetic algorithm
+
+let mutation_chance = 0.015
+
+//Create initial random population
+
+class population {
+    constructor(individuals) {
+        this.individuals = individuals;
+    }
+}
+
+class individual {
+    constructor (genes, snake) {
+        this.genes = genes;
+        this.snake = snake;
+    }
+    
+    determine_direction() {
+
+        //Input layer
+        let head = this.snake.parts[0];
+        let head_x = head[0];
+        let head_y = head[1];
+        let fruit_x = this.snake.fruit_x;
+        let fruit_y = this.snake.fruit_y;
+        let inputs = [head_x, head_y, fruit_x, fruit_y];
+
+        //Calculation
+
+
+        //Output
+        let outputs = ["Up", "Down", "Left", "Right"]
+    }
+}
+
+population = new population([])
+
+for (let index = 0; index < snakes.length; index++) {
+    const snake = snakes[index];
+    genes = []
+
+    //Outputs * Inputs
+    for (let i = 0; i < 4*4; i++) {
+        genes.push(Math.random());
+    }
+    population.individuals.push(new individual(genes, snake))
+}
+
+    
+
+
+//Evaluate fitness for each population
+
+for (let index = 0; index < population.individuals.length; index++) {
+    const current_snake = population.individuals[index];
+}
+
+//Store best individual
+
+//Creating mating pool
+
+//Create next generation by applying crossover
+
+//Reproduce and ignore few populations
+
+//Perform mutation
+
 
 setInterval(draw, 50);
