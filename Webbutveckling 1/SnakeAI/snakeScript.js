@@ -20,7 +20,6 @@ class Snake {
     draw() {
         if (this.alive == true)
         {
-            console.log(this.snake_color);
             this.ctx.beginPath();
             for (let index = this.parts.length-1; index >= 0; index--) {
                 let snakePart = this.parts[index];
@@ -81,7 +80,7 @@ let dx = grid_size;
 let dy = 0;
 let direction = "right";
 
-snake_amount = 8;
+snake_amount = 1;
 
 snakes = [new Snake(canvas, ctx, [
     [0,0],
@@ -139,6 +138,8 @@ document.addEventListener("keypress", function onEvent(event) {
 
 function draw() {
 
+    population.individuals[0].determine_direction();
+
     if (dx !== grid_size && direction == "left") {
         dx = -grid_size
         dy = 0
@@ -188,8 +189,26 @@ function getRandomColor() {
     return color;
 }
 
+function indexOfMax(arr) {
+    if (arr.length === 0) {
+        return -1;
+    }
+
+    var max = arr[0];
+    var maxIndex = 0;
+
+    for (var i = 1; i < arr.length; i++) {
+        if (arr[i] > max) {
+            maxIndex = i;
+            max = arr[i];
+        }
+    }
+
+    return maxIndex;
+}
+
 function sigmoid(x) {
-	return 1 / (1 + Math.exp(-input));
+	return 1 / (1 + Math.exp(-x));
 }
 
 function dot_product(vector_x, vector_y) {
@@ -230,9 +249,40 @@ class individual {
 
         //Calculation
 
+        let output_nodes = [0, 0, 0, 0]
+        let weighted_sums = []
+
+        for (let i = 0; i < 4*4; i++) {
+            if (i < 4) {
+                weighted_sums.push(head_x*this.genes[i]);
+            }
+            else if (i < 8) {
+                weighted_sums.push(head_y*this.genes[i]);
+            }
+            else if (i < 12) {
+                weighted_sums.push(fruit_x*this.genes[i]);
+            }
+            else if (i < 16) {
+                weighted_sums.push(fruit_y*this.genes[i]);
+            }
+        }
+
+        for (let j = 0; j < 4; j++) {
+            for (let k = 0; k < 4; k++) {
+                //Add weighted sum to output node
+                output_nodes[j] += weighted_sums[k*(j+1)]
+            }
+        }
+
+        for (let m = 0; m < output_nodes.length; m++) {
+            output_nodes[m] = sigmoid(output_nodes[m]);
+        }
 
         //Output
-        let outputs = ["Up", "Down", "Left", "Right"]
+        let outputs = ["up", "down", "left", "right"]
+        let output = outputs[indexOfMax(output_nodes)];
+        direction = output;
+        console.log(this.genes);
     }
 }
 
