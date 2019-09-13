@@ -3,7 +3,7 @@ document.body.appendChild(canvas);
 let ctx = canvas.getContext("2d");
 
 class Snake {
-    constructor(canvas, ctx, parts, fruit_x, fruit_y, fruit_taken, dx, dy, snake_color, fruit_color, alive=true) {
+    constructor(canvas, ctx, parts, fruit_x, fruit_y, fruit_taken, dx, dy, snake_color, fruit_color, direction, score, time_out=0, alive=true) {
         this.canvas = canvas
         this.ctx = ctx
         this.parts = parts;
@@ -14,6 +14,9 @@ class Snake {
         this.dy = dy;
         this.snake_color = snake_color;
         this.fruit_color = fruit_color;
+        this.direction = direction;
+        this.score = score;
+        this.time_out = time_out;
         this.alive = alive;
     }
 
@@ -24,8 +27,8 @@ class Snake {
             for (let index = this.parts.length-1; index >= 0; index--) {
                 let snakePart = this.parts[index];
                 if (index === 0) {
-                    snakePart[0] += dx;
-                    snakePart[1] += dy;
+                    snakePart[0] += this.dx;
+                    snakePart[1] += this.dy;
                     this.ctx.rect(snakePart[0], snakePart[1], grid_size, grid_size);
         
                     if (snakePart[0] === this.fruit_x && snakePart[1] === this.fruit_y)
@@ -39,16 +42,16 @@ class Snake {
                             this.alive = false;
                         }
                     }
-                    if (snakePart[0] === canvas.width) {
+                    if (snakePart[0] >= canvas.width) {
                         snakePart[0] = 0;
                     }
-                    else if(snakePart[0] === 0-grid_size) {
+                    else if(snakePart[0] <= 0-grid_size) {
                         snakePart[0] = canvas.width;
                     }
-                    else if(snakePart[1] === canvas.height) {
+                    else if(snakePart[1] >= canvas.height) {
                         snakePart[1] = 0;
                     }
-                    else if(snakePart[1] === 0-grid_size) {
+                    else if(snakePart[1] <= 0-grid_size) {
                         snakePart[1] = canvas.height;
                     }
                     break;
@@ -78,45 +81,47 @@ canvas.height = size*grid_size
 
 let dx = grid_size;
 let dy = 0;
-let direction = "right";
+let direction = "up";
 
-snake_amount = 1;
+let starting_pos = Math.floor(size/2) * grid_size;
+snake_amount = 16;
 
-snakes = [new Snake(canvas, ctx, [
-    [0,0],
-    [0,grid_size],
-    [0,grid_size*2],
-    [0,grid_size*3],
-    [0,grid_size*4],
-    [0,grid_size*5]
-], 
-    getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size, 
-    getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size,
-    false,
-    grid_size,
+snake_starting_positions = [[starting_pos, starting_pos],
+                            [starting_pos, starting_pos + grid_size],
+                            [starting_pos, starting_pos + grid_size*2],
+                            [starting_pos, starting_pos + grid_size*3],
+                            [starting_pos, starting_pos + grid_size*4],
+                            [starting_pos, starting_pos + grid_size*5]]
+
+snakes = [new Snake(canvas, ctx, snake_starting_positions, getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size, getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size, false,
     0,
+    -grid_size,
     "#0095DD",
-    "crimson"
+    "crimson",
+    direction,
+    0
 )];
 for (let index = 0; index < snake_amount-1; index++) {
     let current_canvas = document.createElement('canvas');
     current_canvas.width = size*grid_size;
     current_canvas.height = size*grid_size;
     snakes.push(new Snake(current_canvas, current_canvas.getContext('2d'), [
-        [0,0],
-        [0,grid_size],
-        [0,grid_size*2],
-        [0,grid_size*3],
-        [0,grid_size*4],
-        [0,grid_size*5]
+        [starting_pos, starting_pos],
+        [starting_pos, starting_pos + grid_size],
+        [starting_pos, starting_pos + grid_size*2],
+        [starting_pos, starting_pos + grid_size*3],
+        [starting_pos, starting_pos + grid_size*4],
+        [starting_pos, starting_pos + grid_size*5]
     ],
         getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size, 
         getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size,
         false,
-        grid_size,
         0,
+        -grid_size,
         getRandomColor(),
-        getRandomColor()
+        getRandomColor(),
+        direction,
+        0
     ));
     document.body.appendChild(current_canvas);
 }
@@ -137,33 +142,33 @@ document.addEventListener("keypress", function onEvent(event) {
 });
 
 function draw() {
-
-    population.individuals[0].determine_direction();
-
-    if (dx !== grid_size && direction == "left") {
-        dx = -grid_size
-        dy = 0
-    }
-    
-    if (dx !== -grid_size && direction == "right")
-    {
-        dx = grid_size
-        dy = 0
-    }
-
-    if (dy !== grid_size && direction == "up")
-    {
-        dy = -grid_size
-        dx = 0
-    }
-
-    if (dy !== -grid_size && direction == "down")
-    {
-        dy = grid_size
-        dx = 0
-    }
     for (let index = 0; index < snakes.length; index++) {
+        individuals = population.individuals;
+
         current_snake = snakes[index];
+
+        current_snake.direction = individuals[index].determine_direction()
+
+        if (current_snake.dx !== grid_size && current_snake.direction == "left") {
+            current_snake.dx = -grid_size
+            current_snake.dy = 0
+        }
+        
+        if (current_snake.dx !== -grid_size && current_snake.direction == "right") {
+            current_snake.dx = grid_size
+            current_snake.dy = 0
+        }
+    
+        if (current_snake.dy !== grid_size && current_snake.direction == "up") {
+            current_snake.dy = -grid_size
+            current_snake.dx = 0
+        }
+    
+        if (current_snake.dy !== -grid_size && current_snake.direction == "down") {
+            current_snake.dy = grid_size
+            current_snake.dx = 0
+        }
+
         current_snake.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         current_snake.draw();
@@ -172,7 +177,16 @@ function draw() {
             current_snake.fruit_x = getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size;
             current_snake.fruit_y = getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size;
             current_snake.fruit_taken = false;
+            current_snake.score += 1;
+            current_snake.time_out = 0;
         }
+
+        current_snake.time_out += 1;
+        if (current_snake.time_out >= 200) {
+            current_snake.alive = false;
+        }
+        current_snake.ctx.font = "15px Arial";
+        current_snake.ctx.fillText("Score: " + current_snake.score, 10, 20);
     }
 }
 
@@ -232,23 +246,23 @@ class population {
 }
 
 class individual {
-    constructor (genes, snake) {
+    constructor (genes, snake, fitness) {
         this.genes = genes;
         this.snake = snake;
+        this.fitness = {return: this.snake.score};
     }
     
     determine_direction() {
 
         //Input layer
         let head = this.snake.parts[0];
-        let head_x = head[0];
-        let head_y = head[1];
-        let fruit_x = this.snake.fruit_x;
-        let fruit_y = this.snake.fruit_y;
+        let head_x = head[0]/grid_size;
+        let head_y = head[1]/grid_size;
+        let fruit_x = this.snake.fruit_x/grid_size;
+        let fruit_y = this.snake.fruit_y/grid_size;
         let inputs = [head_x, head_y, fruit_x, fruit_y];
 
         //Calculation
-
         let output_nodes = [0, 0, 0, 0]
         let weighted_sums = []
 
@@ -281,8 +295,7 @@ class individual {
         //Output
         let outputs = ["up", "down", "left", "right"]
         let output = outputs[indexOfMax(output_nodes)];
-        direction = output;
-        console.log(this.genes);
+        return output;
     }
 }
 
@@ -290,17 +303,13 @@ population = new population([])
 
 for (let index = 0; index < snakes.length; index++) {
     const snake = snakes[index];
-    genes = []
-
+    let genes = []
     //Outputs * Inputs
     for (let i = 0; i < 4*4; i++) {
         genes.push(Math.random());
     }
     population.individuals.push(new individual(genes, snake))
 }
-
-    
-
 
 //Evaluate fitness for each population
 
