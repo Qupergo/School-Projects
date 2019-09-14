@@ -2,8 +2,29 @@ let canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
 let ctx = canvas.getContext("2d");
 
+class Snake_Colony {
+    constructor (snakes) {
+        this.snakes = snakes;
+    }
+
+    are_alive() {
+        let amount_of_snakes = this.snakes.length;
+        let dead_snakes = 0;
+        for (let index = 0; index < amount_of_snakes; index++) {
+            if (this.snakes[index].alive == false) {
+                dead_snakes++;
+            }
+            if (dead_snakes === amount_of_snakes) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+}
+
 class Snake {
-    constructor(canvas, ctx, parts, fruit_x, fruit_y, fruit_taken, dx, dy, snake_color, fruit_color, direction, score, time_out=0, alive=true) {
+    constructor(canvas, ctx, parts, fruit_x, fruit_y, fruit_taken, dx, dy, snake_color, fruit_color, direction, score, snake_id, time_out=0, alive=true) {
         this.canvas = canvas
         this.ctx = ctx
         this.parts = parts;
@@ -16,6 +37,7 @@ class Snake {
         this.fruit_color = fruit_color;
         this.direction = direction;
         this.score = score;
+        this.snake_id = snake_id;
         this.time_out = time_out;
         this.alive = alive;
     }
@@ -84,35 +106,41 @@ let dy = 0;
 let direction = "up";
 
 let starting_pos = Math.floor(size/2) * grid_size;
-snake_amount = 16;
+snake_amount = 8;
 
-snake_starting_positions = [[starting_pos, starting_pos],
+snake_starting_positions = [
+                            [starting_pos, starting_pos],
                             [starting_pos, starting_pos + grid_size],
                             [starting_pos, starting_pos + grid_size*2],
                             [starting_pos, starting_pos + grid_size*3],
                             [starting_pos, starting_pos + grid_size*4],
-                            [starting_pos, starting_pos + grid_size*5]]
+                            [starting_pos, starting_pos + grid_size*5]
+                            ]
 
-snakes = [new Snake(canvas, ctx, snake_starting_positions, getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size, getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size, false,
+snake_colony = new Snake_Colony([])
+
+snake_colony.snakes = [new Snake(canvas, ctx, snake_starting_positions, getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size, getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size, false,
     0,
     -grid_size,
     "#0095DD",
     "crimson",
     direction,
+    0,
     0
 )];
-for (let index = 0; index < snake_amount-1; index++) {
+
+for (let index = 1; index < snake_amount; index++) {
     let current_canvas = document.createElement('canvas');
     current_canvas.width = size*grid_size;
     current_canvas.height = size*grid_size;
-    snakes.push(new Snake(current_canvas, current_canvas.getContext('2d'), [
+    snake_colony.snakes.push(new Snake(current_canvas, current_canvas.getContext('2d'), [
         [starting_pos, starting_pos],
         [starting_pos, starting_pos + grid_size],
         [starting_pos, starting_pos + grid_size*2],
         [starting_pos, starting_pos + grid_size*3],
         [starting_pos, starting_pos + grid_size*4],
         [starting_pos, starting_pos + grid_size*5]
-    ],
+        ],
         getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size, 
         getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size,
         false,
@@ -121,34 +149,36 @@ for (let index = 0; index < snake_amount-1; index++) {
         getRandomColor(),
         getRandomColor(),
         direction,
-        0
+        0,
+        index
     ));
     document.body.appendChild(current_canvas);
 }
 
 document.addEventListener("keypress", function onEvent(event) {
     if (event.key === "a") {
-        direction = "left";
+        snake_colony.snakes[0].direction = "left";
     }
     else if (event.key === "d") {
-        direction = "right";
+        snake_colony.snakes[0].direction = "right";
     }
     else if (event.key === "w") {
-        direction = "up";
+        snake_colony.snakes[0].direction = "up";
     }
     else if (event.key === "s") {
-        direction = "down";
+        snake_colony.snakes[0].direction = "down";
     }
 });
 
 function draw() {
-    for (let index = 0; index < snakes.length; index++) {
-        individuals = population.individuals;
+    
+    for (let index = 0; index < snake_amount; index++) {
 
-        current_snake = snakes[index];
+        current_snake = snake_colony.snakes[index];
+        if (index != 0) {
+            websocket.send(JSON.stringify({positions: [current_snake.parts[0][0], current_snake.parts[0][1], current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id}))
 
-        current_snake.direction = individuals[index].determine_direction()
-
+        }
         if (current_snake.dx !== grid_size && current_snake.direction == "left") {
             current_snake.dx = -grid_size
             current_snake.dy = 0
@@ -183,12 +213,20 @@ function draw() {
 
         current_snake.time_out += 1;
         if (current_snake.time_out >= 200) {
-            current_snake.alive = false;
+            //current_snake.alive = false;
         }
         current_snake.ctx.font = "15px Arial";
         current_snake.ctx.fillText("Score: " + current_snake.score, 10, 20);
+
+        if (snake_colony.are_alive()) {
+            //Snakes are alive
+        }
     }
 }
+
+
+
+
 
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min) ) + min;
@@ -203,119 +241,12 @@ function getRandomColor() {
     return color;
 }
 
-function indexOfMax(arr) {
-    if (arr.length === 0) {
-        return -1;
-    }
-
-    var max = arr[0];
-    var maxIndex = 0;
-
-    for (var i = 1; i < arr.length; i++) {
-        if (arr[i] > max) {
-            maxIndex = i;
-            max = arr[i];
-        }
-    }
-
-    return maxIndex;
-}
-
-function sigmoid(x) {
-	return 1 / (1 + Math.exp(-x));
-}
-
-function dot_product(vector_x, vector_y) {
-    let weighted_sum = 0;
-    for (let index = 0; index < vector_x.length; index++) {
-        weighted_sum += vector_x[index] * vector_y[index];
-    }
-    return weighted_sum;
-}
 
 //Genetic algorithm
 
-let mutation_chance = 0.015
-
 //Create initial random population
 
-class population {
-    constructor(individuals) {
-        this.individuals = individuals;
-    }
-}
-
-class individual {
-    constructor (genes, snake, fitness) {
-        this.genes = genes;
-        this.snake = snake;
-        this.fitness = {return: this.snake.score};
-    }
-    
-    determine_direction() {
-
-        //Input layer
-        let head = this.snake.parts[0];
-        let head_x = head[0]/grid_size;
-        let head_y = head[1]/grid_size;
-        let fruit_x = this.snake.fruit_x/grid_size;
-        let fruit_y = this.snake.fruit_y/grid_size;
-        let inputs = [head_x, head_y, fruit_x, fruit_y];
-
-        //Calculation
-        let output_nodes = [0, 0, 0, 0]
-        let weighted_sums = []
-
-        for (let i = 0; i < 4*4; i++) {
-            if (i < 4) {
-                weighted_sums.push(head_x*this.genes[i]);
-            }
-            else if (i < 8) {
-                weighted_sums.push(head_y*this.genes[i]);
-            }
-            else if (i < 12) {
-                weighted_sums.push(fruit_x*this.genes[i]);
-            }
-            else if (i < 16) {
-                weighted_sums.push(fruit_y*this.genes[i]);
-            }
-        }
-
-        for (let j = 0; j < 4; j++) {
-            for (let k = 0; k < 4; k++) {
-                //Add weighted sum to output node
-                output_nodes[j] += weighted_sums[k*(j+1)]
-            }
-        }
-
-        for (let m = 0; m < output_nodes.length; m++) {
-            output_nodes[m] = sigmoid(output_nodes[m]);
-        }
-
-        //Output
-        let outputs = ["up", "down", "left", "right"]
-        let output = outputs[indexOfMax(output_nodes)];
-        return output;
-    }
-}
-
-population = new population([])
-
-for (let index = 0; index < snakes.length; index++) {
-    const snake = snakes[index];
-    let genes = []
-    //Outputs * Inputs
-    for (let i = 0; i < 4*4; i++) {
-        genes.push(Math.random());
-    }
-    population.individuals.push(new individual(genes, snake))
-}
-
 //Evaluate fitness for each population
-
-for (let index = 0; index < population.individuals.length; index++) {
-    const current_snake = population.individuals[index];
-}
 
 //Store best individual
 
@@ -327,5 +258,11 @@ for (let index = 0; index < population.individuals.length; index++) {
 
 //Perform mutation
 
-
+let websocket = new WebSocket("ws://127.0.0.1:6789/");
+websocket.onmessage = function(event) {
+    data = JSON.parse(event.data)
+    //data[0] is the snake id, data[1] is the direction
+    snake_colony.snakes[data.snake_id].direction = data.direction;
+    console.log(data)
+}
 setInterval(draw, 50);
