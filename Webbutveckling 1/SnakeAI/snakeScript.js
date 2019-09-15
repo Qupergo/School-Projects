@@ -265,4 +265,8 @@ websocket.onmessage = function(event) {
     snake_colony.snakes[data.snake_id].direction = data.direction;
     console.log(data)
 }
+
+websocket.onopen = function(event) {
+    websocket.send(snake_amount)
+}
 setInterval(draw, 50);

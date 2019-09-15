@@ -32,25 +32,29 @@ class NeuralNetwork():
 
 
 
-first_layer = NeuralLayer(5, 4)
-second_layer = NeuralLayer(5, 5)
-output_layer = NeuralLayer(4, 5)
-neural_network = NeuralNetwork([first_layer, second_layer, output_layer])
-
 decisions = ['up', 'down', 'left', 'right']
+
+neural_networks = []
 
 #Don't forget to add new neural_network for each snake connected to their ID (which is also their index if it matters don't think it will)
 #All snakes have to have their own neural network for decisions
-#Also change input data to distance away from in some way, maybe same method as code bullet maybe just the exact distance away in all cardinal directions I really have no clue
 async def decision(websocket, path):
     async for message in websocket:
-        data = json.loads(message)
-        raw_output = await neural_network.think(data['positions'])
-        raw_output = raw_output[-1].tolist()
-        output = decisions[raw_output.index(max(raw_output))]
+        if isinstance(message, int):
+            for _ in range(message):
+                first_layer = NeuralLayer(16, 4)
+                output_layer = NeuralLayer(4, 16)
+                neural_networks.append(NeuralNetwork([first_layer, output_layer]))
+        
+        else:
+            print(data)
+            data = json.loads(message)
+            raw_output = await neural_networks[data['snake_id']].think(data['positions'])
+            raw_output = raw_output[-1].tolist()
+            output = decisions[raw_output.index(max(raw_output))]
 
-        snake_id = data['snake_id']
-        await websocket.send(json.dumps({"direction": output, "snake_id": snake_id}))
+            snake_id = data['snake_id']
+            await websocket.send(json.dumps({"direction": output, "snake_id": snake_id}))
 
 start_server = websockets.serve(decision, "localhost", 6789)
 
