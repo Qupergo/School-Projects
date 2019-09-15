@@ -97,7 +97,7 @@ class Snake {
 }
 
 grid_size = 15
-size = 25
+size = 30
 canvas.width = size*grid_size
 canvas.height = size*grid_size
 
@@ -176,7 +176,7 @@ function draw() {
 
         current_snake = snake_colony.snakes[index];
         if (index != 0) {
-            websocket.send(JSON.stringify({positions: [current_snake.parts[0][0], current_snake.parts[0][1], current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id}))
+            websocket.send(JSON.stringify({snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id}))
 
         }
         if (current_snake.dx !== grid_size && current_snake.direction == "left") {

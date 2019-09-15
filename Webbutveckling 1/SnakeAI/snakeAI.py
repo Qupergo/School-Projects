@@ -3,6 +3,7 @@ import json
 import logging
 import websockets
 from numpy import random, exp, dot, where
+from math import sqrt
 
 logging.basicConfig()
 
@@ -30,28 +31,76 @@ class NeuralNetwork():
             outputs.append(await self.__sigmoid(dot(outputs[-1], layer.synaptic_weights)))
         return outputs
 
+#Change fitness so it promotes staying alive in the first few seconds but later makes it more important to collect fruit
+#This will make it learn to survive quicker
+
+
+    
+async def position_to_distance(snake_parts, fruit):        
+    #Implement later
+    #distances_to_walls = []
+    
+    snake_head = snake_parts[0]
+    distances_to_snake_parts = await distance(snake_head, snake_parts)
+    distances_to_fruit = await distance(snake_head, [fruit])
+
+    return distances_to_snake_parts + distances_to_fruit
+
+
+async def distance(starting_position, other_positions):
+    #Up, down, left, right, diagonal_right_down, diagonal_right_up, diagonal_left_up, diagonal_right_down
+    distances = 8 * [0]
+    for other_position in other_positions:
+        distance = starting_position[0] - other_position[0], starting_position[1] - other_position[1]
+        if distance[0] == 0 and distance[1] > 0:
+            #Up
+            distances[0] = distance[1]
+        if distance[0] == 0 and distance[1] < 0:
+            #Down
+            distances[1] = distance[1]
+        if distance[0] > 0 and distance[1] == 0:
+            #Left
+            distances[2] = distance[0]
+        if distance[0] < 0 and distance[1] == 0:
+            #Right
+            distances[3] = distance[0]
+        if abs(distance[0]) == abs(distance[1]):
+            if distance[0] > 0 and distance[1] > 0:
+                #Diagonal_right_down
+                distances[4] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
+            if distance[0] > 0 and distance[1] < 0:
+                #Diagonal_right_up
+                distances[5] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
+            if distance[0] < 0 and distance[1] < 0:
+                #Diagonal_left_up
+                distances[6] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
+            if distance[0] < 0 and distance[1] > 0:
+                #Diagonal_left_down
+                distances[7] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
+        return distances
+
+
+
 
 
 decisions = ['up', 'down', 'left', 'right']
 
 neural_networks = []
 
-#Don't forget to add new neural_network for each snake connected to their ID (which is also their index if it matters don't think it will)
-#All snakes have to have their own neural network for decisions
 async def decision(websocket, path):
     async for message in websocket:
-        if isinstance(message, int):
-            for _ in range(message):
-                first_layer = NeuralLayer(16, 4)
-                output_layer = NeuralLayer(4, 16)
+        data = json.loads(message)
+        if isinstance(data, int):
+            for _ in range(data):
+                first_layer = NeuralLayer(50, 16)
+                output_layer = NeuralLayer(4, 50)
                 neural_networks.append(NeuralNetwork([first_layer, output_layer]))
-        
         else:
-            print(data)
-            data = json.loads(message)
-            raw_output = await neural_networks[data['snake_id']].think(data['positions'])
+            inputs = await position_to_distance(data['snake_positions'], data['fruit_positions'])
+            raw_output = await neural_networks[data['snake_id']].think(inputs)
             raw_output = raw_output[-1].tolist()
             output = decisions[raw_output.index(max(raw_output))]
+            print(raw_output)
 
             snake_id = data['snake_id']
             await websocket.send(json.dumps({"direction": output, "snake_id": snake_id}))
