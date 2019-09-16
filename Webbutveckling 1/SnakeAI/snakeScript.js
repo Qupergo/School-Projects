@@ -52,18 +52,7 @@ class Snake {
                     snakePart[0] += this.dx;
                     snakePart[1] += this.dy;
                     this.ctx.rect(snakePart[0], snakePart[1], grid_size, grid_size);
-        
-                    if (snakePart[0] === this.fruit_x && snakePart[1] === this.fruit_y)
-                    {
-                        this.fruit_taken = true
-                        this.parts.push([-grid_size, -grid_size])
-                    }
-        
-                    for (let j = 1; j < this.parts.length; j++) {
-                        if (snakePart[0] === this.parts[j][0] && snakePart[1] === this.parts[j][1]) {
-                            this.alive = false;
-                        }
-                    }
+
                     if (snakePart[0] >= canvas.width) {
                         snakePart[0] = 0;
                     }
@@ -76,6 +65,19 @@ class Snake {
                     else if(snakePart[1] <= 0-grid_size) {
                         snakePart[1] = canvas.height;
                     }
+
+                    if (snakePart[0] === this.fruit_x && snakePart[1] === this.fruit_y)
+                    {
+                        this.fruit_taken = true
+                        this.parts.push([-grid_size, -grid_size])
+                    }
+        
+                    for (let j = 1; j < this.parts.length; j++) {
+                        if (snakePart[0] === this.parts[j][0] && snakePart[1] === this.parts[j][1]) {
+                            this.alive = false;
+                        }
+                    }
+
                     break;
                 }
                 snakePart[0] = this.parts[index - 1][0];
@@ -106,7 +108,7 @@ let dy = 0;
 let direction = "up";
 
 let starting_pos = Math.floor(size/2) * grid_size;
-snake_amount = 8;
+snake_amount = 16;
 
 snake_starting_positions = [
                             [starting_pos, starting_pos],
@@ -176,8 +178,8 @@ function draw() {
 
         current_snake = snake_colony.snakes[index];
         if (index != 0) {
-            websocket.send(JSON.stringify({snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id}))
-
+            
+            websocket.send(JSON.stringify({action: 'find_direction', snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id}))
         }
         if (current_snake.dx !== grid_size && current_snake.direction == "left") {
             current_snake.dx = -grid_size
@@ -242,21 +244,7 @@ function getRandomColor() {
 }
 
 
-//Genetic algorithm
 
-//Create initial random population
-
-//Evaluate fitness for each population
-
-//Store best individual
-
-//Creating mating pool
-
-//Create next generation by applying crossover
-
-//Reproduce and ignore few populations
-
-//Perform mutation
 
 let websocket = new WebSocket("ws://127.0.0.1:6789/");
 websocket.onmessage = function(event) {
@@ -267,6 +255,10 @@ websocket.onmessage = function(event) {
 }
 
 websocket.onopen = function(event) {
-    websocket.send(snake_amount)
+    websocket.send(JSON.stringify({action: 'start', amount_of_snakes: snake_amount}))
+}
+
+function recreate_networks() {
+    websocket.send(JSON.stringify({action: 'recreate_networks', amount_of_snakes: snake_amount}))
 }
 setInterval(draw, 50);

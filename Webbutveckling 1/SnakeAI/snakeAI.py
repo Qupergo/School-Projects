@@ -79,6 +79,9 @@ async def distance(starting_position, other_positions):
                 distances[7] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
         return distances
 
+async def crossover(snakes_index, genes):
+    pass
+
 
 
 
@@ -90,20 +93,39 @@ neural_networks = []
 async def decision(websocket, path):
     async for message in websocket:
         data = json.loads(message)
-        if isinstance(data, int):
-            for _ in range(data):
+        action = data['action']
+
+        if action == 'start' or action == 'recreate_networks':
+            neural_networks = []
+            for _ in range(data['amount_of_snakes']):
                 first_layer = NeuralLayer(50, 16)
                 output_layer = NeuralLayer(4, 50)
                 neural_networks.append(NeuralNetwork([first_layer, output_layer]))
-        else:
+
+        elif action == 'find_direction':
             inputs = await position_to_distance(data['snake_positions'], data['fruit_positions'])
             raw_output = await neural_networks[data['snake_id']].think(inputs)
             raw_output = raw_output[-1].tolist()
             output = decisions[raw_output.index(max(raw_output))]
-            print(raw_output)
-
             snake_id = data['snake_id']
             await websocket.send(json.dumps({"direction": output, "snake_id": snake_id}))
+
+        elif action == 'do_crossover':
+            crossover(data['id_of_fittest_snakes'], neural_networks)
+
+#Script is 1 move behind in replying this may need a fix
+
+#Genetic algorithm
+
+#Store best individual
+
+#Creating mating pool
+
+#Create next generation by applying crossover
+
+#Reproduce and ignore few populations
+
+#Perform mutation
 
 start_server = websockets.serve(decision, "localhost", 6789)
 

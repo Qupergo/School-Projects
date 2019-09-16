@@ -10,3 +10,8 @@ canvas {
     display: block;
     */
 }
+
+.restart_button {
+    background-color: red;
+    border-radius: 15%;
+}
