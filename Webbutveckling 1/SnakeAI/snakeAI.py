@@ -8,7 +8,7 @@ from random import randint
 
 logging.basicConfig()
 
-mutation_chance = 0.5
+mutation_chance = 0.1
 
 class NeuralLayer():
     def __init__(self, number_of_nodes, number_of_inputs_per_node, synaptic_weights=[]):
@@ -54,34 +54,35 @@ async def position_to_distance(snake_parts, fruit, screen_size):
 async def distance(starting_position, other_positions, wall):
     #Up, down, left, right, diagonal_right_down, diagonal_right_up, diagonal_left_up, diagonal_right_down
     distances = 8 * [0]
+    
     for other_position in other_positions:
         distance = starting_position[0] - other_position[0], starting_position[1] - other_position[1]
         if distance[0] == 0 and distance[1] > 0 or wall:
             #Up
-            distances[0] = distance[1]
+            distances[0] = abs(distance[1])
         if distance[0] == 0 and distance[1] < 0 or wall:
             #Down
-            distances[1] = distance[1]
+            distances[1] = abs(distance[1])
         if distance[0] > 0 and distance[1] == 0 or wall:
             #Left
-            distances[2] = distance[0]
+            distances[2] = abs(distance[0])
         if distance[0] < 0 and distance[1] == 0 or wall:
             #Right
-            distances[3] = distance[0]
+            distances[3] = abs(distance[0])
         if abs(distance[0]) == abs(distance[1]) or wall:
             if distance[0] > 0 and distance[1] > 0 or wall:
-                #Diagonal_right_down
+                #Diagonal_left_up
                 distances[4] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
             if distance[0] > 0 and distance[1] < 0 or wall:
                 #Diagonal_right_up
                 distances[5] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
             if distance[0] < 0 and distance[1] < 0 or wall:
-                #Diagonal_left_up
+                #Diagonal_right_down
                 distances[6] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
             if distance[0] < 0 and distance[1] > 0 or wall:
-                #Diagonal_left_down
+                #Diagonal_right_up
                 distances[7] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
-        return distances
+    return distances
 
 async def crossover(snakes_index, all_neural_networks):
     #Assuming top 2 snakes are in snakes_index or they are sorted according to fitness
@@ -98,12 +99,12 @@ async def crossover(snakes_index, all_neural_networks):
             
             second_flattened_weights = concatenate(second_parent_layer.synaptic_weights).tolist()
 
-            cutoff_point = randint(1, len(first_flattened_weights))
+            cutoff_point = randint(len(first_flattened_weights)//3, len(first_flattened_weights))
 
             layer = first_flattened_weights[0:cutoff_point:] + second_flattened_weights[cutoff_point::]
-            for gene in layer:
+            for current_gene in layer:
                 if random.random() < mutation_chance:
-                    gene = 2 * random.random() - 1
+                    current_gene = 2 * random.random() - 1
 
             new_neural_network.layers.append(NeuralLayer(first_parent_layer.number_of_nodes, first_parent_layer.number_of_inputs_per_node, layer))
 
@@ -130,8 +131,8 @@ async def decision(websocket, path):
         if action == 'start' or action == 'recreate_networks':
             neural_networks = []
             for _ in range(data['amount_of_snakes']):
-                first_layer = NeuralLayer(50, 24)
-                output_layer = NeuralLayer(4, 50)
+                first_layer = NeuralLayer(16, 24)
+                output_layer = NeuralLayer(4, 16)
                 neural_networks.append(NeuralNetwork([first_layer, output_layer]))
 
         elif action == 'find_direction':

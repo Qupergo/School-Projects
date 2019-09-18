@@ -1,3 +1,6 @@
+
+
+
 class Snake_Colony {
     constructor (snake_amount) {
         this.snake_amount = snake_amount;
@@ -39,14 +42,14 @@ class Snake_Colony {
         this.snakes = []
         for (let index = 0; index < this.snake_amount; index++) {
 
-            let current_canvas = document.createElement('canvas');
-            current_canvas.width = canvas_width;
-            current_canvas.height = canvas_height;
+            //let current_canvas = document.createElement('canvas');
+            //current_canvas.width = canvas_width;
+            //current_canvas.height = canvas_height;
 
-            document.body.appendChild(current_canvas);
+            //document.body.appendChild(current_canvas);
             let snake = new Snake();
-            snake.canvas = current_canvas;
-            snake.ctx = current_canvas.getContext('2d');
+            snake.canvas = canvas;
+            snake.ctx = ctx;
             snake.parts = [
                 [starting_pos, starting_pos],
                 [starting_pos, starting_pos + grid_size],
@@ -109,22 +112,22 @@ class Snake {
 
                     if (snakePart[0] >= canvas_width) {
                         this.alive = false;
-                        document.body.removeChild(current_snake.canvas);
+                        //document.body.removeChild(current_snake.canvas);
                         current_snake.canvas = false;
                     }
                     else if(snakePart[0] <= 0-grid_size) {
                         this.alive = false;
-                        document.body.removeChild(current_snake.canvas);
+                        //document.body.removeChild(current_snake.canvas);
                         current_snake.canvas = false;
                     }
                     else if(snakePart[1] >= canvas_height) {
                         this.alive = false;
-                        document.body.removeChild(current_snake.canvas);
+                        //document.body.removeChild(current_snake.canvas);
                         current_snake.canvas = false;
                     }
                     else if(snakePart[1] <= 0-grid_size) {
                         this.alive = false;
-                        document.body.removeChild(current_snake.canvas);
+                        //document.body.removeChild(current_snake.canvas);
                         current_snake.canvas = false;
                     }
 
@@ -137,7 +140,7 @@ class Snake {
                     for (let j = 1; j < this.parts.length; j++) {
                         if (snakePart[0] === this.parts[j][0] && snakePart[1] === this.parts[j][1]) {
                             this.alive = false;
-                            document.body.removeChild(current_snake.canvas);
+                            //document.body.removeChild(current_snake.canvas);
                             current_snake.canvas = false;
                         }
                     }
@@ -179,12 +182,11 @@ document.addEventListener("keypress", function onEvent(event) {
 });
 
 function draw() {
-
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let index = 0; index < snake_amount; index++) {
 
         current_snake = snake_colony.snakes[index];
         if (current_snake.alive) {
-            websocket.send(JSON.stringify({action: 'find_direction', snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id, canvas_size: canvas_height}))
 
             if (current_snake.dx !== grid_size && current_snake.direction == "left") {
                 current_snake.dx = -grid_size
@@ -206,8 +208,6 @@ function draw() {
                 current_snake.dx = 0
             }
 
-            current_snake.ctx.clearRect(0, 0, current_snake.canvas.width, current_snake.canvas.height);
-
             current_snake.draw();
 
             if (current_snake.fruit_taken) {
@@ -220,21 +220,24 @@ function draw() {
 
             current_snake.time_out += 1;
             current_snake.living_time += 1;
-            if (current_snake.time_out >= 300) {
+            if (current_snake.time_out >= 300 && current_snake.canvas !== false) {
                 current_snake.alive = false;
-                document.body.removeChild(current_snake.canvas)
+                //document.body.removeChild(current_snake.canvas)
                 current_snake.canvas = false;
             }
             current_snake.ctx.font = "15px Arial";
             current_snake.ctx.fillText("Score: " + current_snake.score, 10, 20);
 
+            websocket.send(JSON.stringify({action: 'find_direction', snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id, canvas_size: canvas_height}))
+
             if (snake_colony.are_alive() == false && document.getElementById("auto_crossover").checked == true) {
                 do_crossover();
             }
+
         }
 
         else if (current_snake.canvas !== false) {
-            document.body.removeChild(current_snake.canvas);
+            //document.body.removeChild(current_snake.canvas);
             current_snake.canvas = false;
         }
     }
@@ -271,8 +274,8 @@ function recreate_networks() {
 
 
 function compare_fitness(snake1, snake2) {
-    snake1.fitness = snake1.score + snake1.living_time;
-    snake2.fitness = snake2.score + snake2.living_time;
+    snake1.fitness = Math.floor(snake1.living_time * snake1.living_time * Math.pow(2, (Math.floor(snake1.score))));
+    snake2.fitness =  Math.floor(snake2.living_time * snake2.living_time * Math.pow(2, (Math.floor(snake2.score))));
     return snake2.fitness - snake1.fitness;
 }
 
@@ -281,17 +284,25 @@ function do_crossover() {
     let snake_ids = [];
     console.log(snake_colony.snakes[0].fitness)
 
+    let not_useless = false;
     for (let index = 0; index < snake_colony.snakes.length; index++) {
-
         snake_ids.push(snake_colony.snakes[index].snake_id);
+        if (snake_colony.snakes[index].fitness > 0.3 && snake_colony.snakes[index].fitness !== 1) {
+            not_useless = true;
+        }
     }
-    websocket.send(JSON.stringify({action: 'do_crossover', snakes_sorted: snake_colony.snakes}))
-    snake_colony.create();
+    if (not_useless) {
+        websocket.send(JSON.stringify({action: 'do_crossover', snakes_sorted: snake_colony.snakes}))
+        snake_colony.create();
+    }
+    else {
+        recreate_networks();
+    }
 }
 
-snake_amount = 32;
-grid_size = 13;
-size = 30;
+snake_amount = 64;
+grid_size = 10;
+size = 60;
 direction = "up";
 canvas_width = size*grid_size;
 canvas_height = size*grid_size;
@@ -299,8 +310,14 @@ canvas_height = size*grid_size;
 let dx = grid_size;
 let dy = 0;
 
+let canvas = document.createElement('canvas');
+canvas.width = canvas_width;
+canvas.height = canvas_height;
+let ctx = canvas.getContext('2d');
+document.body.appendChild(canvas);
+
 let starting_pos = Math.floor(size/2) * grid_size;
 snake_colony = new Snake_Colony(snake_amount);
 snake_colony.create();
 
-setInterval(draw, 50);
+setInterval(draw, 40);
