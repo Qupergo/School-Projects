@@ -261,4 +261,15 @@ websocket.onopen = function(event) {
 function recreate_networks() {
     websocket.send(JSON.stringify({action: 'recreate_networks', amount_of_snakes: snake_amount}))
 }
+
+function compare_fitness(snake1, snake2) {
+    fitness1 = snake1.score;
+    fitness2 = snake2.score;
+    return fitness2 - fitness1;
+}
+
+function do_crossover() {
+    snake_colony.snakes.sort(compare_fitness)
+    websocket.send(JSON.stringify({action: 'do_crossover', snakes_sorted: snake_colony.snakes}))
+}
 setInterval(draw, 50);

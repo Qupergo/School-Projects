@@ -2,8 +2,9 @@ import asyncio
 import json
 import logging
 import websockets
-from numpy import random, exp, dot, where
+from numpy import random, exp, dot, where, concatenate, reshape
 from math import sqrt
+import random
 
 logging.basicConfig()
 
@@ -12,8 +13,13 @@ STATE = {"value": 0}
 USERS = set()
 
 class NeuralLayer():
-    def __init__(self, number_of_nodes, number_of_inputs_per_node):
-        self.synaptic_weights = 2 * random.random((number_of_inputs_per_node, number_of_nodes)) - 1
+    def __init__(self, number_of_nodes, number_of_inputs_per_node, synaptic_weights=[]):
+        self.number_of_nodes = number_of_nodes
+        self.number_of_inputs_per_node = number_of_inputs_per_node
+        if synaptic_weights:
+            self.synaptic_weights = synaptic_weights
+        else:
+            self.synaptic_weights = 2 * random.random((number_of_inputs_per_node, number_of_nodes)) - 1
 
 class NeuralNetwork():
     def __init__(self, layers):
@@ -79,10 +85,32 @@ async def distance(starting_position, other_positions):
                 distances[7] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
         return distances
 
-async def crossover(snakes_index, genes):
-    pass
+async def crossover(snakes_index, all_neural_networks):
+    #Assuming top 2 snakes are in snakes_index or they are sorted according to fitness
+    parents = []
+    new_neural_networks = []
+    for index in snakes_index:
+        parents.append(all_neural_networks[index])
 
 
+    for _ in range(len(snakes_index)):
+        cutoff_points = []
+        new_neural_network = NeuralNetwork([])
+
+        for first_parent_layer, second_parent_layer in zip(parents[0].layers, parents[1].layers):
+            first_flattened_weights = concatenate(first_parent_layer.synaptic_weights)
+            
+            second_flattened_weights = concatenate(second_parent_layer.synaptic_weights)
+
+            cutoff_point = random.randint(1, len(first_flattened_weights))
+            
+            new_neural_network.layers.append(NeuralLayer(first_parent_layer.number_of_nodes, first_parent_layer.number_of_inputs_per_node, first_flattened_weights[0:cutoff_point:] + second_flattened_weights[cutoff_points::]))
+
+        for layer in new_neural_network.layers:
+            layer = reshape(layer, (layer.number_of_nodes, layer.number_of_inputs_per_node))
+        new_neural_networks.append(new_neural_network)
+    return new_neural_networks
+    
 
 
 
@@ -111,7 +139,8 @@ async def decision(websocket, path):
             await websocket.send(json.dumps({"direction": output, "snake_id": snake_id}))
 
         elif action == 'do_crossover':
-            crossover(data['id_of_fittest_snakes'], neural_networks)
+            snake_id_sorted = [i.id for i in data['snakes_sorted']]
+            neural_networks = crossover(snake_id_sorted, neural_networks)
 
 #Script is 1 move behind in replying this may need a fix
 
