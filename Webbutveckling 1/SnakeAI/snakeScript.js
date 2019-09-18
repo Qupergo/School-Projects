@@ -1,10 +1,12 @@
-let canvas = document.createElement("canvas");
-document.body.appendChild(canvas);
-let ctx = canvas.getContext("2d");
-
 class Snake_Colony {
-    constructor (snakes) {
-        this.snakes = snakes;
+    constructor (snake_amount) {
+        this.snake_amount = snake_amount;
+        this.snakes = [];
+    }
+    reset_scores() {
+        for (let index = 0; index < this.snakes.length; index++) {
+            this.snakes[index].score = 0;
+        }      
     }
 
     are_alive() {
@@ -21,10 +23,60 @@ class Snake_Colony {
         return true;
     }
 
+    revive() {
+        for (let i = 0; i < this.snakes.length; i++) {
+            if (this.snakes[i].alive == false) {
+                this.snakes[i].alive = true;
+                this.snakes[i].snake_color = getRandomColor();
+                this.snakes[i].fruit_color = getRandomColor();
+                this.snakes[i].time_out = 0;
+                document.body.appendChild(this.snakes.canvas)
+            }
+        }
+    }
+
+    create() {
+        this.snakes = []
+        for (let index = 0; index < this.snake_amount; index++) {
+
+            let current_canvas = document.createElement('canvas');
+            current_canvas.width = canvas_width;
+            current_canvas.height = canvas_height;
+
+            document.body.appendChild(current_canvas);
+            let snake = new Snake();
+            snake.canvas = current_canvas;
+            snake.ctx = current_canvas.getContext('2d');
+            snake.parts = [
+                [starting_pos, starting_pos],
+                [starting_pos, starting_pos + grid_size],
+                [starting_pos, starting_pos + grid_size*2],
+                [starting_pos, starting_pos + grid_size*3],
+                [starting_pos, starting_pos + grid_size*4],
+                [starting_pos, starting_pos + grid_size*5]
+                ];
+            snake.fruit_x = getRndInteger((canvas_width-grid_size)/grid_size, 0)*grid_size;
+            snake.fruit_y = getRndInteger(0, (canvas_height-grid_size)/grid_size)*grid_size;
+            snake.fruit_taken = false;
+            snake.dx = 0;
+            snake.dy = -grid_size;
+            snake.snake_color = getRandomColor();
+            snake.fruit_color = getRandomColor();
+            snake.direction = direction;
+            snake.score = 0;
+            snake.snake_id = index;
+            snake.time_out = 0;
+            snake.alive = true;
+            snake.living_time = 0;
+            snake.fitness = 0;
+            this.snakes.push(snake)
+        }
+    }
+
 }
 
 class Snake {
-    constructor(canvas, ctx, parts, fruit_x, fruit_y, fruit_taken, dx, dy, snake_color, fruit_color, direction, score, snake_id, time_out=0, alive=true) {
+    constructor(canvas, ctx, parts, fruit_x, fruit_y, fruit_taken, dx, dy, snake_color, fruit_color, direction, score, snake_id, time_out=0, alive=true, living_time=0, fitness=0) {
         this.canvas = canvas
         this.ctx = ctx
         this.parts = parts;
@@ -40,6 +92,8 @@ class Snake {
         this.snake_id = snake_id;
         this.time_out = time_out;
         this.alive = alive;
+        this.living_time = living_time;
+        this.fitness = fitness
     }
 
     draw() {
@@ -53,17 +107,25 @@ class Snake {
                     snakePart[1] += this.dy;
                     this.ctx.rect(snakePart[0], snakePart[1], grid_size, grid_size);
 
-                    if (snakePart[0] >= canvas.width) {
-                        snakePart[0] = 0;
+                    if (snakePart[0] >= canvas_width) {
+                        this.alive = false;
+                        document.body.removeChild(current_snake.canvas);
+                        current_snake.canvas = false;
                     }
                     else if(snakePart[0] <= 0-grid_size) {
-                        snakePart[0] = canvas.width;
+                        this.alive = false;
+                        document.body.removeChild(current_snake.canvas);
+                        current_snake.canvas = false;
                     }
-                    else if(snakePart[1] >= canvas.height) {
-                        snakePart[1] = 0;
+                    else if(snakePart[1] >= canvas_height) {
+                        this.alive = false;
+                        document.body.removeChild(current_snake.canvas);
+                        current_snake.canvas = false;
                     }
                     else if(snakePart[1] <= 0-grid_size) {
-                        snakePart[1] = canvas.height;
+                        this.alive = false;
+                        document.body.removeChild(current_snake.canvas);
+                        current_snake.canvas = false;
                     }
 
                     if (snakePart[0] === this.fruit_x && snakePart[1] === this.fruit_y)
@@ -75,6 +137,8 @@ class Snake {
                     for (let j = 1; j < this.parts.length; j++) {
                         if (snakePart[0] === this.parts[j][0] && snakePart[1] === this.parts[j][1]) {
                             this.alive = false;
+                            document.body.removeChild(current_snake.canvas);
+                            current_snake.canvas = false;
                         }
                     }
 
@@ -98,64 +162,6 @@ class Snake {
     }
 }
 
-grid_size = 15
-size = 30
-canvas.width = size*grid_size
-canvas.height = size*grid_size
-
-let dx = grid_size;
-let dy = 0;
-let direction = "up";
-
-let starting_pos = Math.floor(size/2) * grid_size;
-snake_amount = 16;
-
-snake_starting_positions = [
-                            [starting_pos, starting_pos],
-                            [starting_pos, starting_pos + grid_size],
-                            [starting_pos, starting_pos + grid_size*2],
-                            [starting_pos, starting_pos + grid_size*3],
-                            [starting_pos, starting_pos + grid_size*4],
-                            [starting_pos, starting_pos + grid_size*5]
-                            ]
-
-snake_colony = new Snake_Colony([])
-
-snake_colony.snakes = [new Snake(canvas, ctx, snake_starting_positions, getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size, getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size, false,
-    0,
-    -grid_size,
-    "#0095DD",
-    "crimson",
-    direction,
-    0,
-    0
-)];
-
-for (let index = 1; index < snake_amount; index++) {
-    let current_canvas = document.createElement('canvas');
-    current_canvas.width = size*grid_size;
-    current_canvas.height = size*grid_size;
-    snake_colony.snakes.push(new Snake(current_canvas, current_canvas.getContext('2d'), [
-        [starting_pos, starting_pos],
-        [starting_pos, starting_pos + grid_size],
-        [starting_pos, starting_pos + grid_size*2],
-        [starting_pos, starting_pos + grid_size*3],
-        [starting_pos, starting_pos + grid_size*4],
-        [starting_pos, starting_pos + grid_size*5]
-        ],
-        getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size, 
-        getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size,
-        false,
-        0,
-        -grid_size,
-        getRandomColor(),
-        getRandomColor(),
-        direction,
-        0,
-        index
-    ));
-    document.body.appendChild(current_canvas);
-}
 
 document.addEventListener("keypress", function onEvent(event) {
     if (event.key === "a") {
@@ -173,62 +179,66 @@ document.addEventListener("keypress", function onEvent(event) {
 });
 
 function draw() {
-    
+
     for (let index = 0; index < snake_amount; index++) {
 
         current_snake = snake_colony.snakes[index];
-        if (index != 0) {
+        if (current_snake.alive) {
+            websocket.send(JSON.stringify({action: 'find_direction', snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id, canvas_size: canvas_height}))
+
+            if (current_snake.dx !== grid_size && current_snake.direction == "left") {
+                current_snake.dx = -grid_size
+                current_snake.dy = 0
+            }
             
-            websocket.send(JSON.stringify({action: 'find_direction', snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id}))
-        }
-        if (current_snake.dx !== grid_size && current_snake.direction == "left") {
-            current_snake.dx = -grid_size
-            current_snake.dy = 0
-        }
+            if (current_snake.dx !== -grid_size && current_snake.direction == "right") {
+                current_snake.dx = grid_size
+                current_snake.dy = 0
+            }
         
-        if (current_snake.dx !== -grid_size && current_snake.direction == "right") {
-            current_snake.dx = grid_size
-            current_snake.dy = 0
-        }
-    
-        if (current_snake.dy !== grid_size && current_snake.direction == "up") {
-            current_snake.dy = -grid_size
-            current_snake.dx = 0
-        }
-    
-        if (current_snake.dy !== -grid_size && current_snake.direction == "down") {
-            current_snake.dy = grid_size
-            current_snake.dx = 0
+            if (current_snake.dy !== grid_size && current_snake.direction == "up") {
+                current_snake.dy = -grid_size
+                current_snake.dx = 0
+            }
+        
+            if (current_snake.dy !== -grid_size && current_snake.direction == "down") {
+                current_snake.dy = grid_size
+                current_snake.dx = 0
+            }
+
+            current_snake.ctx.clearRect(0, 0, current_snake.canvas.width, current_snake.canvas.height);
+
+            current_snake.draw();
+
+            if (current_snake.fruit_taken) {
+                current_snake.fruit_x = getRndInteger((current_snake.canvas.width-grid_size)/grid_size, 0)*grid_size;
+                current_snake.fruit_y = getRndInteger(0, (current_snake.canvas.height-grid_size)/grid_size)*grid_size;
+                current_snake.fruit_taken = false;
+                current_snake.score += 1;
+                current_snake.time_out = 0;
+            }
+
+            current_snake.time_out += 1;
+            current_snake.living_time += 1;
+            if (current_snake.time_out >= 300) {
+                current_snake.alive = false;
+                document.body.removeChild(current_snake.canvas)
+                current_snake.canvas = false;
+            }
+            current_snake.ctx.font = "15px Arial";
+            current_snake.ctx.fillText("Score: " + current_snake.score, 10, 20);
+
+            if (snake_colony.are_alive() == false && document.getElementById("auto_crossover").checked == true) {
+                do_crossover();
+            }
         }
 
-        current_snake.ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        current_snake.draw();
-
-        if (current_snake.fruit_taken) {
-            current_snake.fruit_x = getRndInteger((canvas.width-grid_size)/grid_size, 0)*grid_size;
-            current_snake.fruit_y = getRndInteger(0, (canvas.height-grid_size)/grid_size)*grid_size;
-            current_snake.fruit_taken = false;
-            current_snake.score += 1;
-            current_snake.time_out = 0;
-        }
-
-        current_snake.time_out += 1;
-        if (current_snake.time_out >= 200) {
-            //current_snake.alive = false;
-        }
-        current_snake.ctx.font = "15px Arial";
-        current_snake.ctx.fillText("Score: " + current_snake.score, 10, 20);
-
-        if (snake_colony.are_alive()) {
-            //Snakes are alive
+        else if (current_snake.canvas !== false) {
+            document.body.removeChild(current_snake.canvas);
+            current_snake.canvas = false;
         }
     }
 }
-
-
-
-
 
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min) ) + min;
@@ -243,15 +253,11 @@ function getRandomColor() {
     return color;
 }
 
-
-
-
 let websocket = new WebSocket("ws://127.0.0.1:6789/");
 websocket.onmessage = function(event) {
     data = JSON.parse(event.data)
     //data[0] is the snake id, data[1] is the direction
     snake_colony.snakes[data.snake_id].direction = data.direction;
-    console.log(data)
 }
 
 websocket.onopen = function(event) {
@@ -260,16 +266,41 @@ websocket.onopen = function(event) {
 
 function recreate_networks() {
     websocket.send(JSON.stringify({action: 'recreate_networks', amount_of_snakes: snake_amount}))
+    snake_colony.create();
 }
 
+
 function compare_fitness(snake1, snake2) {
-    fitness1 = snake1.score;
-    fitness2 = snake2.score;
-    return fitness2 - fitness1;
+    snake1.fitness = snake1.score + snake1.living_time;
+    snake2.fitness = snake2.score + snake2.living_time;
+    return snake2.fitness - snake1.fitness;
 }
 
 function do_crossover() {
     snake_colony.snakes.sort(compare_fitness)
+    let snake_ids = [];
+    console.log(snake_colony.snakes[0].fitness)
+
+    for (let index = 0; index < snake_colony.snakes.length; index++) {
+
+        snake_ids.push(snake_colony.snakes[index].snake_id);
+    }
     websocket.send(JSON.stringify({action: 'do_crossover', snakes_sorted: snake_colony.snakes}))
+    snake_colony.create();
 }
+
+snake_amount = 32;
+grid_size = 13;
+size = 30;
+direction = "up";
+canvas_width = size*grid_size;
+canvas_height = size*grid_size;
+
+let dx = grid_size;
+let dy = 0;
+
+let starting_pos = Math.floor(size/2) * grid_size;
+snake_colony = new Snake_Colony(snake_amount);
+snake_colony.create();
+
 setInterval(draw, 50);
