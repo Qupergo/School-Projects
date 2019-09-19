@@ -83,6 +83,8 @@ async def distance(starting_position, other_positions, screen_size, direction, w
         temp = min((starting_position[0]), (starting_position[1]))    
         directions[directions.index("left_up")] = sqrt((temp*temp)*2)
         
+        print(f"Distances are {directions}")
+
         return directions
 
     for other_position in other_positions:
@@ -183,8 +185,8 @@ async def decision(websocket, path):
         if action == 'start' or action == 'recreate_networks':
             neural_networks = []
             for _ in range(data['amount_of_snakes']):
-                first_layer = NeuralLayer(50, 24)
-                output_layer = NeuralLayer(4, 50)
+                first_layer = NeuralLayer(16, 24)
+                output_layer = NeuralLayer(4, 16)
                 neural_networks.append(NeuralNetwork([first_layer, output_layer]))
 
         elif action == 'find_direction':
