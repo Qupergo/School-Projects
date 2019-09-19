@@ -63,8 +63,9 @@ class Snake_Colony {
             snake.fruit_taken = false;
             snake.dx = 0;
             snake.dy = -grid_size;
-            snake.snake_color = getRandomColor();
-            snake.fruit_color = getRandomColor();
+            let color = getRandomColor()
+            snake.snake_color = color;
+            snake.fruit_color = color;
             snake.direction = direction;
             snake.score = 0;
             snake.snake_id = index;
@@ -220,7 +221,7 @@ function draw() {
 
             current_snake.time_out += 1;
             current_snake.living_time += 1;
-            if (current_snake.time_out >= 300 && current_snake.canvas !== false) {
+            if (current_snake.time_out >= 150 && current_snake.canvas !== false) {
                 current_snake.alive = false;
                 //document.body.removeChild(current_snake.canvas)
                 current_snake.canvas = false;
@@ -228,7 +229,7 @@ function draw() {
             current_snake.ctx.font = "15px Arial";
             current_snake.ctx.fillText("Score: " + current_snake.score, 10, 20);
 
-            websocket.send(JSON.stringify({action: 'find_direction', snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id, canvas_size: canvas_height}))
+            websocket.send(JSON.stringify({action: 'find_direction', snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id, canvas_size: canvas_height, direction: current_snake.direction}))
 
             if (snake_colony.are_alive() == false && document.getElementById("auto_crossover").checked == true) {
                 do_crossover();
@@ -274,8 +275,8 @@ function recreate_networks() {
 
 
 function compare_fitness(snake1, snake2) {
-    snake1.fitness = Math.floor(snake1.living_time * snake1.living_time * Math.pow(2, (Math.floor(snake1.score))));
-    snake2.fitness =  Math.floor(snake2.living_time * snake2.living_time * Math.pow(2, (Math.floor(snake2.score))));
+    snake1.fitness = Math.floor(snake1.living_time + snake1.living_time * Math.pow(2, (Math.floor(snake1.score))));
+    snake2.fitness =  Math.floor(snake2.living_time + snake2.living_time * Math.pow(2, (Math.floor(snake2.score))));
     return snake2.fitness - snake1.fitness;
 }
 
@@ -300,7 +301,7 @@ function do_crossover() {
     }
 }
 
-snake_amount = 64;
+snake_amount = 40;
 grid_size = 10;
 size = 60;
 direction = "up";
@@ -320,4 +321,4 @@ let starting_pos = Math.floor(size/2) * grid_size;
 snake_colony = new Snake_Colony(snake_amount);
 snake_colony.create();
 
-setInterval(draw, 40);
+setInterval(draw, 50);

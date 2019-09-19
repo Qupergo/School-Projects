@@ -8,7 +8,7 @@ from random import randint
 
 logging.basicConfig()
 
-mutation_chance = 0.1
+mutation_chance = 0.2
 
 class NeuralLayer():
     def __init__(self, number_of_nodes, number_of_inputs_per_node, synaptic_weights=[]):
@@ -35,54 +35,107 @@ class NeuralNetwork():
             outputs.append(await self.__sigmoid(dot(outputs[-1], layer.synaptic_weights)))
         return outputs
 
-#Change fitness so it promotes staying alive in the first few seconds but later makes it more important to collect fruit
-#This will make it learn to survive quicker
-
-
+async def position_to_distance(snake_parts, fruit, screen_size, direction):
     
-async def position_to_distance(snake_parts, fruit, screen_size):
-    
-    walls = [[screen_size, screen_size], [screen_size, 0], [0, screen_size], [0, 0]]
     snake_head = snake_parts[0]
-    distances_to_snake_parts = await distance(snake_head, snake_parts, False)
-    distances_to_fruit = await distance(snake_head, [fruit], False)
-    distances_to_walls = await distance(snake_head, walls, True)
+    distances_to_snake_parts = await distance(snake_head, snake_parts, screen_size, direction, False)
+    distances_to_fruit = await distance(snake_head, [fruit], screen_size, direction, False)
+    distances_to_walls = await distance(snake_head, "Lorem ipsum dolor sit amet", screen_size, direction, True)
 
     return distances_to_snake_parts + distances_to_fruit + distances_to_walls
 
 
-async def distance(starting_position, other_positions, wall):
-    #Up, down, left, right, diagonal_right_down, diagonal_right_up, diagonal_left_up, diagonal_right_down
-    distances = 8 * [0]
+async def distance(starting_position, other_positions, screen_size, direction, wall):
+    #Forward, down, left, right, diagonal_right_down, diagonal_right_up, diagonal_left_up, diagonal_right_down
+    #Other positions: [[x, y], [x, y], [x, y], [x, y]] 
+    #Starting position    
+    #This is the default state, when snake is travelling up
+    directions = ["up", "down", "left", "right", "right_down", "right_up", "left_down", "left_up"]
+    temp_directions = {direction: [] for direction in directions}
+
+    if direction == "right":
+        directions = ["right", "left", "up", "down", "left_down", "right_down", "left_up", "right_up"]
     
+    elif direction == "left":
+        directions = ["left", "right", "up", "down", "right_up", "left_up", "right_down", "left_down"]
+    
+    elif direction == "down":
+        directions = ["down", "up", "left", "right", "left_up", "left_down", "right_up", "right_down"]
+    
+    if wall:
+        directions[directions.index("up")] = starting_position[1]
+    
+        directions[directions.index("down")] = screen_size - starting_position[1]
+    
+        directions[directions.index("left")] = starting_position[0]
+    
+        directions[directions.index("right")] = screen_size - starting_position[0]
+
+        temp = min((screen_size - starting_position[0]), (screen_size - starting_position[1]))
+        directions[directions.index("right_down")] = sqrt((temp*temp)*2)
+
+        temp = min((screen_size - starting_position[0]), (starting_position[1]))
+        directions[directions.index("right_up")] = sqrt((temp*temp)*2)
+
+        temp = min((starting_position[0]), (screen_size - starting_position[1]))
+        directions[directions.index("left_down")] = sqrt((temp*temp)*2)
+
+        temp = min((starting_position[0]), (starting_position[1]))    
+        directions[directions.index("left_up")] = sqrt((temp*temp)*2)
+        
+        return directions
+
     for other_position in other_positions:
-        distance = starting_position[0] - other_position[0], starting_position[1] - other_position[1]
-        if distance[0] == 0 and distance[1] > 0 or wall:
-            #Up
-            distances[0] = abs(distance[1])
-        if distance[0] == 0 and distance[1] < 0 or wall:
-            #Down
-            distances[1] = abs(distance[1])
-        if distance[0] > 0 and distance[1] == 0 or wall:
-            #Left
-            distances[2] = abs(distance[0])
-        if distance[0] < 0 and distance[1] == 0 or wall:
-            #Right
-            distances[3] = abs(distance[0])
-        if abs(distance[0]) == abs(distance[1]) or wall:
-            if distance[0] > 0 and distance[1] > 0 or wall:
-                #Diagonal_left_up
-                distances[4] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
-            if distance[0] > 0 and distance[1] < 0 or wall:
-                #Diagonal_right_up
-                distances[5] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
-            if distance[0] < 0 and distance[1] < 0 or wall:
-                #Diagonal_right_down
-                distances[6] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
-            if distance[0] < 0 and distance[1] > 0 or wall:
-                #Diagonal_right_up
-                distances[7] = sqrt(distance[0]*distance[0] + distance[1]*distance[1])
-    return distances
+        temp_directions["up"].append(await distance_to_object(other_position, [starting_position, [starting_position[0], 0]]))
+    
+        temp_directions["down"].append(await distance_to_object(other_position, [starting_position, [starting_position[0], screen_size]]))
+    
+        temp_directions["left"].append(await distance_to_object(other_position, [starting_position, [0, starting_position[1]]]))
+    
+        temp_directions["right"].append(await distance_to_object(other_position, [starting_position, [screen_size, starting_position[1]]]))
+    
+        temp_directions["right_down"].append(await distance_to_object(other_position, [starting_position, [screen_size, screen_size]]))
+    
+        temp_directions["right_up"].append(await distance_to_object(other_position, [starting_position, [screen_size, 0]]))
+
+        temp_directions["left_down"].append(await distance_to_object(other_position, [starting_position, [0, screen_size]]))
+    
+        temp_directions["left_up"].append(await distance_to_object(other_position, [starting_position, [0, 0]]))
+
+    directions[directions.index("up")] = min(temp_directions["up"])
+    directions[directions.index("down")] = min(temp_directions["down"])
+    directions[directions.index("left")] = min(temp_directions["left"])
+    directions[directions.index("right")] = min(temp_directions["right"])
+    directions[directions.index("right_down")] = min(temp_directions["right_down"])
+    directions[directions.index("right_up")] = min(temp_directions["right_up"])
+    directions[directions.index("left_down")] = min(temp_directions["left_down"])
+    directions[directions.index("left_up")] = min(temp_directions["left_up"])
+    return directions
+
+async def distance_to_object(object_position, path):
+    #Object position [x, y]
+    #path [[x_start, y_start], [x_end, y_end]]
+    object_position_x = object_position[0]
+    object_position_y = object_position[1]
+    x_start = path[0][0]
+    y_start = path[0][1]
+    x_end = path[1][0]
+    y_end = path[1][1]
+
+    if object_position_y == y_start and min(x_start, x_end) <= object_position[0] <= max(x_start, x_end):
+        return abs(x_start - object_position_x)
+    
+    if object_position_x == x_start and min(y_start, y_end) <= object_position[1] <= max(y_start, y_end):
+        return abs(y_start - object_position_y)
+    
+    distance_x = x_start - object_position_x
+    distance_y = y_start - object_position_y
+    if abs(distance_x) == abs(distance_y) and min(y_start, y_end) <= object_position[1] <= max(y_start, y_end) and min(x_start, x_end) <= object_position[0] <= max(x_start, x_end):
+        return sqrt(distance_x*distance_x + distance_y*distance_y)
+
+        
+
+    return 0
 
 async def crossover(snakes_index, all_neural_networks):
     #Assuming top 2 snakes are in snakes_index or they are sorted according to fitness
@@ -102,9 +155,8 @@ async def crossover(snakes_index, all_neural_networks):
             cutoff_point = randint(len(first_flattened_weights)//3, len(first_flattened_weights))
 
             layer = first_flattened_weights[0:cutoff_point:] + second_flattened_weights[cutoff_point::]
-            for current_gene in layer:
-                if random.random() < mutation_chance:
-                    current_gene = 2 * random.random() - 1
+            layer = [(2 * random.random() - 1) if random.random() < mutation_chance else gene for gene in layer]
+            print(random.random() < mutation_chance)
 
             new_neural_network.layers.append(NeuralLayer(first_parent_layer.number_of_nodes, first_parent_layer.number_of_inputs_per_node, layer))
 
@@ -131,12 +183,12 @@ async def decision(websocket, path):
         if action == 'start' or action == 'recreate_networks':
             neural_networks = []
             for _ in range(data['amount_of_snakes']):
-                first_layer = NeuralLayer(16, 24)
-                output_layer = NeuralLayer(4, 16)
+                first_layer = NeuralLayer(50, 24)
+                output_layer = NeuralLayer(4, 50)
                 neural_networks.append(NeuralNetwork([first_layer, output_layer]))
 
         elif action == 'find_direction':
-            inputs = await position_to_distance(data['snake_positions'], data['fruit_positions'], data['canvas_size'])
+            inputs = await position_to_distance(data['snake_positions'], data['fruit_positions'], data['canvas_size'], data['direction'])
             raw_output = await neural_networks[data['snake_id']].think(inputs)
             raw_output = raw_output[-1].tolist()
             output = decisions[raw_output.index(max(raw_output))]
