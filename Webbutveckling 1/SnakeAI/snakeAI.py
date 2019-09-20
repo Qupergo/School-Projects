@@ -18,6 +18,7 @@ class NeuralLayer():
             self.synaptic_weights = synaptic_weights
         else:
             self.synaptic_weights = 2 * random.random((number_of_inputs_per_node, number_of_nodes)) - 1
+    
 
 class NeuralNetwork():
     def __init__(self, layers):
@@ -34,7 +35,15 @@ class NeuralNetwork():
                 continue
             outputs.append(await self.__sigmoid(dot(outputs[-1], layer.synaptic_weights)))
         return outputs
+    
+    async def mutate(self):
+        for layer in self.layers:
+            for row in layer:
+                for gene in row:
+                    if random.random() < mutation_chance:
+                        gene = random.random() * 2 - 1
 
+ 
 async def position_to_distance(snake_parts, fruit, screen_size, direction):
     
     snake_head = snake_parts[0]
@@ -83,8 +92,6 @@ async def distance(starting_position, other_positions, screen_size, direction, w
         temp = min((starting_position[0]), (starting_position[1]))    
         directions[directions.index("left_up")] = sqrt((temp*temp)*2)
         
-        print(f"Distances are {directions}")
-
         return directions
 
     for other_position in other_positions:
@@ -146,27 +153,37 @@ async def crossover(snakes_index, all_neural_networks):
     for index in snakes_index:
         parents.append(all_neural_networks[index])
 
-    for _ in range(len(snakes_index)):
-        new_neural_network = NeuralNetwork([])
+    for _ in range(len(snakes_index)//2):
+        child1 = NeuralNetwork([])
+        child2 = NeuralNetwork([])
 
         for first_parent_layer, second_parent_layer in zip(parents[0].layers, parents[1].layers):
             first_flattened_weights = concatenate(first_parent_layer.synaptic_weights).tolist()
-            
+    
             second_flattened_weights = concatenate(second_parent_layer.synaptic_weights).tolist()
 
             cutoff_point = randint(len(first_flattened_weights)//3, len(first_flattened_weights))
 
-            layer = first_flattened_weights[0:cutoff_point:] + second_flattened_weights[cutoff_point::]
-            layer = [(2 * random.random() - 1) if random.random() < mutation_chance else gene for gene in layer]
-            print(random.random() < mutation_chance)
+            #TODO: Create another network with opposite parent genes so no genes are lost
+            child1_layer = first_flattened_weights[0:cutoff_point:] + second_flattened_weights[cutoff_point::]
+            child2_layer = second_flattened_weights[0:cutoff_point:] + first_flattened_weights[cutoff_point::]
 
-            new_neural_network.layers.append(NeuralLayer(first_parent_layer.number_of_nodes, first_parent_layer.number_of_inputs_per_node, layer))
+            await child1_layer.mutate()
+            await child2_layer.mutate()
+
+            child1.layers.append(NeuralLayer(first_parent_layer.number_of_nodes, first_parent_layer.number_of_inputs_per_node, child1_layer))
+            child2.layers.append(NeuralLayer(first_parent_layer.number_of_nodes, first_parent_layer.number_of_inputs_per_node, child2_layer))
 
 
-        for layer in new_neural_network.layers:
+        for layer in child1.layers:
             layer.synaptic_weights = reshape(layer.synaptic_weights, (layer.number_of_inputs_per_node, layer.number_of_nodes))
         
-        new_neural_networks.append(new_neural_network)
+        for layer in child2.layers:
+            layer.synaptic_weights = reshape(layer.synaptic_weights, (layer.number_of_inputs_per_node, layer.number_of_nodes))
+
+        new_neural_networks.append(child1)
+        new_neural_networks.append(child2)
+        
     return new_neural_networks
     
 

@@ -221,7 +221,7 @@ function draw() {
 
             current_snake.time_out += 1;
             current_snake.living_time += 1;
-            if (current_snake.time_out >= 150 && current_snake.canvas !== false) {
+            if (current_snake.time_out >= 225 && current_snake.canvas !== false) {
                 current_snake.alive = false;
                 //document.body.removeChild(current_snake.canvas)
                 current_snake.canvas = false;
