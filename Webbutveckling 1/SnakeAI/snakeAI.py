@@ -8,7 +8,7 @@ from random import randint
 
 logging.basicConfig()
 
-mutation_chance = 0.2
+mutation_chance = 0.4
 
 class NeuralLayer():
     def __init__(self, number_of_nodes, number_of_inputs_per_node, synaptic_weights=[]):
@@ -142,8 +142,6 @@ async def distance_to_object(object_position, path):
     if abs(distance_x) == abs(distance_y) and min(y_start, y_end) <= object_position[1] <= max(y_start, y_end) and min(x_start, x_end) <= object_position[0] <= max(x_start, x_end):
         return sqrt(distance_x*distance_x + distance_y*distance_y)
 
-        
-
     return 0
 
 async def crossover(snakes_index, all_neural_networks):
@@ -168,22 +166,23 @@ async def crossover(snakes_index, all_neural_networks):
             child1_layer = first_flattened_weights[0:cutoff_point:] + second_flattened_weights[cutoff_point::]
             child2_layer = second_flattened_weights[0:cutoff_point:] + first_flattened_weights[cutoff_point::]
 
-            await child1_layer.mutate()
-            await child2_layer.mutate()
-
             child1.layers.append(NeuralLayer(first_parent_layer.number_of_nodes, first_parent_layer.number_of_inputs_per_node, child1_layer))
             child2.layers.append(NeuralLayer(first_parent_layer.number_of_nodes, first_parent_layer.number_of_inputs_per_node, child2_layer))
 
 
         for layer in child1.layers:
             layer.synaptic_weights = reshape(layer.synaptic_weights, (layer.number_of_inputs_per_node, layer.number_of_nodes))
-        
+
         for layer in child2.layers:
             layer.synaptic_weights = reshape(layer.synaptic_weights, (layer.number_of_inputs_per_node, layer.number_of_nodes))
+        
+        
+        child1.mutate()
+        child2.mutate()
 
         new_neural_networks.append(child1)
         new_neural_networks.append(child2)
-        
+
     return new_neural_networks
     
 

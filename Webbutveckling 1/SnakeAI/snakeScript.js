@@ -1,11 +1,9 @@
-
-
-
 class Snake_Colony {
     constructor (snake_amount) {
         this.snake_amount = snake_amount;
         this.snakes = [];
     }
+
     reset_scores() {
         for (let index = 0; index < this.snakes.length; index++) {
             this.snakes[index].score = 0;
@@ -103,13 +101,11 @@ class Snake {
     draw() {
         if (this.alive == true)
         {
-            this.ctx.beginPath();
             for (let index = this.parts.length-1; index >= 0; index--) {
                 let snakePart = this.parts[index];
                 if (index === 0) {
                     snakePart[0] += this.dx;
                     snakePart[1] += this.dy;
-                    this.ctx.rect(snakePart[0], snakePart[1], grid_size, grid_size);
 
                     if (snakePart[0] >= canvas_width) {
                         this.alive = false;
@@ -150,18 +146,7 @@ class Snake {
                 }
                 snakePart[0] = this.parts[index - 1][0];
                 snakePart[1] = this.parts[index - 1][1];
-                
-                this.ctx.rect(snakePart[0], snakePart[1], grid_size, grid_size);
-            }
-            this.ctx.fillStyle = this.snake_color;
-            this.ctx.fill();
-            this.ctx.closePath();
-
-            this.ctx.beginPath();
-            this.ctx.rect(this.fruit_x, this.fruit_y, grid_size, grid_size);
-            this.ctx.fillStyle = this.fruit_color;
-            this.ctx.fill();
-            this.ctx.closePath();
+                }
         }
     }
 }
@@ -183,7 +168,6 @@ document.addEventListener("keypress", function onEvent(event) {
 });
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let index = 0; index < snake_amount; index++) {
 
         current_snake = snake_colony.snakes[index];
@@ -226,8 +210,7 @@ function draw() {
                 //document.body.removeChild(current_snake.canvas)
                 current_snake.canvas = false;
             }
-            current_snake.ctx.font = "15px Arial";
-            current_snake.ctx.fillText("Score: " + current_snake.score, 10, 20);
+
 
             websocket.send(JSON.stringify({action: 'find_direction', snake_positions: current_snake.parts, fruit_positions: [current_snake.fruit_x, current_snake.fruit_y], snake_id: current_snake.snake_id, canvas_size: canvas_height, direction: current_snake.direction}))
 
@@ -288,7 +271,7 @@ function do_crossover() {
     let not_useless = false;
     for (let index = 0; index < snake_colony.snakes.length; index++) {
         snake_ids.push(snake_colony.snakes[index].snake_id);
-        if (snake_colony.snakes[index].fitness > 0.3 && snake_colony.snakes[index].fitness !== 1) {
+        if (snake_colony.snakes[index].fitness > 400 && snake_colony.snakes[index].fitness !== 1) {
             not_useless = true;
         }
     }
@@ -301,7 +284,7 @@ function do_crossover() {
     }
 }
 
-snake_amount = 40;
+snake_amount = 2000;
 grid_size = 10;
 size = 60;
 direction = "up";
@@ -316,7 +299,6 @@ canvas.width = canvas_width;
 canvas.height = canvas_height;
 let ctx = canvas.getContext('2d');
 document.body.appendChild(canvas);
-
 let starting_pos = Math.floor(size/2) * grid_size;
 snake_colony = new Snake_Colony(snake_amount);
 snake_colony.create();
