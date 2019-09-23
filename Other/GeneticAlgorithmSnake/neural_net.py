@@ -3,10 +3,10 @@ from numpy import exp, random, dot, concatenate, reshape
 globalMutationChance = 0.01
 
 class NeuralLayer():
-    def __init__(self, number_of_nodes, number_of_inputs_per_node, synaptic_weights=[]):
+    def __init__(self, number_of_nodes, number_of_inputs_per_node, synaptic_weights=False):
         self.number_of_nodes = number_of_nodes
         self.number_of_inputs_per_node = number_of_inputs_per_node
-        if synaptic_weights:
+        if isinstance(synaptic_weights, list):
             self.synaptic_weights = synaptic_weights
         else:
             self.synaptic_weights = 2 * random.random((number_of_inputs_per_node, number_of_nodes)) - 1
@@ -22,17 +22,17 @@ class NeuralNetwork():
         outputs = []
         for count, layer in enumerate(self.layers):
             if count == 0:
-                outputs.append(await self.__sigmoid(dot(inputs, layer.synaptic_weights)))
+                outputs.append(self.__sigmoid(dot(inputs, layer.synaptic_weights)))
                 continue
-            outputs.append(await self.__sigmoid(dot(outputs[-1], layer.synaptic_weights)))
+            outputs.append(self.__sigmoid(dot(outputs[-1], layer.synaptic_weights)))
         return outputs[-1]        
 
     def mutate(self):
         for layer in self.layers:
-            for row in layer:
+            for row in layer.synaptic_weights:
                 for gene in row:
-                    if random.random < globalMutationChance:
-                        gene = (random.random() * 1000 - 1)
+                    if random.random() < globalMutationChance:
+                        gene = (random.random() * 2 - 1)
     
     def crossover(self, other_network):
         children_networks = [NeuralNetwork([]), NeuralNetwork([])]
@@ -57,6 +57,6 @@ class NeuralNetwork():
         
         for child_network in children_networks:
             for layer in child_network.layers:
-                layer.synaptic_weights = reshape(layer, (layer.number_of_inputs_per_node, layer.number_of_nodes))
+                layer.synaptic_weights = reshape(layer.synaptic_weights, (layer.number_of_inputs_per_node, layer.number_of_nodes))
         
         return children_networks
