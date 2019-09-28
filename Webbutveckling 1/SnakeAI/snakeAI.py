@@ -162,7 +162,6 @@ async def crossover(snakes_index, all_neural_networks):
 
             cutoff_point = randint(len(first_flattened_weights)//3, len(first_flattened_weights))
 
-            #TODO: Create another network with opposite parent genes so no genes are lost
             child1_layer = first_flattened_weights[0:cutoff_point:] + second_flattened_weights[cutoff_point::]
             child2_layer = second_flattened_weights[0:cutoff_point:] + first_flattened_weights[cutoff_point::]
 
@@ -217,7 +216,7 @@ async def decision(websocket, path):
             snake_id_sorted = [i['snake_id'] for i in data['snakes_sorted']]
             neural_networks = await crossover(snake_id_sorted, neural_networks)
 
-start_server = websockets.serve(decision, "localhost", 6789)
+start_server = websockets.serve(decision, "localhost", 1234)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 print("Ready to go!")

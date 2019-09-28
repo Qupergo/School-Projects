@@ -69,6 +69,5 @@ class Population:
         for snake in self.population:
             if snake.fitness > best_snake.fitness:
                 best_snake = snake
-        print(best_snake.move_history)
         return best_snake
 

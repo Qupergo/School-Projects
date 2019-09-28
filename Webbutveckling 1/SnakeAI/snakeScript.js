@@ -257,7 +257,7 @@ function getRandomColor() {
     return color;
 }
 
-let websocket = new WebSocket("ws://127.0.0.1:6789/");
+let websocket = new WebSocket("ws://127.0.0.1:1234/");
 websocket.onmessage = function(event) {
     data = JSON.parse(event.data)
     //data[0] is the snake id, data[1] is the direction

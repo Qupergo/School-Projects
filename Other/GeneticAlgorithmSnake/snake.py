@@ -26,13 +26,13 @@ class Snake():
             ]
         self.vector = []
         self.left_to_live = 100
-        self.move_history = []
+        #Make moves equal tail and then append current head position to it
+        self.move_history = {"moves":self.tail + [self.pos_x, self.pos_y], "food_position":[], "length":[]}
 
     
     def think(self):
         outputs = self.brain.think(self.look()).tolist()
         self.direction = ["up", "down", "left", "right"][outputs.index(max(outputs))]
-        print(self.direction)
 
     def move(self):
         #vector = [delta_x, delta_y]
@@ -57,26 +57,31 @@ class Snake():
         if self.pos_x == self.food.pos_x and self.pos_y == self.food.pos_y:
             self.eat()
 
-
         if [self.pos_x, self.pos_y] in self.tail:
             self.alive = False
+        
+        if self.pos_x >= self.screen_size or self.pos_y >= self.screen_size or self.pos_x < 0 or self.pos_y < 0:
+            self.alive = False
+        
+        #Add new neck
+        self.tail.insert(0, [self.pos_x, self.pos_y])
 
-        for count, _ in enumerate(self.tail):
-            if count == len(self.tail) - 1:
-                self.tail[-1 * (count + 1)] = [self.pos_x, self.pos_y]
-            else:
-                #Move current tail part to the next part
-                self.tail[-1 * (count + 1)] = self.tail[-1 * (count + 2)]
+        #Remove last tail part
+        self.tail.pop()
+
 
         self.pos_x += self.vector[0]
         self.pos_y += self.vector[1]
-        self.move_history.append(self.vector)
+        self.move_history["moves"].append([self.pos_x, self.pos_y])
+        self.move_history["food_position"].append([self.food.pos_x, self.food.pos_y])
+        self.move_history["length"].append(self.length)
 
     def eat(self):
         self.length += 1
         if self.length > 6:
             print(f"Length of a snake is {self.length}")
-        #Append tail outside of grid and it will be added onto tail automatically next move
+        
+        #Append tail so this part is removed instead of actual tail
         self.tail.append([-1,-1])
 
         self.left_to_live = 100
