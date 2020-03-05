@@ -1,15 +1,24 @@
 from numpy import exp, random, dot, concatenate, reshape
+generator = random.default_rng()
+from sklearn import preprocessing
+scaler = preprocessing.StandardScaler()
 
-globalMutationChance = 0.01
+globalMutationChance = 0.05
+print(globalMutationChance)
 
 class NeuralLayer():
-    def __init__(self, number_of_nodes, number_of_inputs_per_node, synaptic_weights=False):
+    def __init__(self, number_of_nodes, number_of_inputs_per_node, synaptic_weights=None, bias = None):
         self.number_of_nodes = number_of_nodes
         self.number_of_inputs_per_node = number_of_inputs_per_node
-        if isinstance(synaptic_weights, list):
-            self.synaptic_weights = synaptic_weights
+        if synaptic_weights is None:
+            self.synaptic_weights = 2 * random.rand(number_of_inputs_per_node, number_of_nodes) - 1
         else:
-            self.synaptic_weights = 2 * random.random((number_of_inputs_per_node, number_of_nodes)) - 1
+            self.synaptic_weights = synaptic_weights        
+
+        if bias == None:
+            self.bias = 2 * generator.random() - 1
+        else:
+            self.bias = bias
 
 class NeuralNetwork():
     def __init__(self, layers):
@@ -19,20 +28,23 @@ class NeuralNetwork():
         return 1 / (1 + exp(-x))
     
     def think(self, inputs):
+        inputs = preprocessing.normalize(inputs)
         outputs = []
         for count, layer in enumerate(self.layers):
             if count == 0:
-                outputs.append(self.__sigmoid(dot(inputs, layer.synaptic_weights)))
+                outputs.append(self.__sigmoid(dot(inputs, layer.synaptic_weights) + layer.bias))
                 continue
-            outputs.append(self.__sigmoid(dot(outputs[-1], layer.synaptic_weights)))
-        return outputs[-1]        
+            outputs.append(self.__sigmoid(dot(outputs[-1], layer.synaptic_weights) + layer.bias))
+        return outputs[-1]   
 
     def mutate(self):
-        for layer in self.layers:
-            for row in layer.synaptic_weights:
-                for gene in row:
-                    if random.random() < globalMutationChance:
-                        gene = (random.random() * 2 - 1)
+        for layer_index, _ in enumerate(self.layers):
+            
+            layer_weights_shape = self.layers[layer_index].synaptic_weights.shape
+            random_values = random.rand(layer_weights_shape[0], layer_weights_shape[1])
+            
+            self.layers[layer_index].synaptic_weights[random_values < globalMutationChance] = (generator.random() * 2 - 1)
+    
     
     def crossover(self, other_network):
         children_networks = [NeuralNetwork([]), NeuralNetwork([])]
@@ -48,15 +60,14 @@ class NeuralNetwork():
             new_weights1 = concatenate([flattened_weights1[0:cutoff_point:], flattened_weights2[cutoff_point::]])
             new_weights2 = concatenate([flattened_weights2[0:cutoff_point:], flattened_weights1[cutoff_point::]])
 
-            new_layer1 = NeuralLayer(layer1.number_of_nodes, layer1.number_of_inputs_per_node, new_weights1)
-            new_layer2 = NeuralLayer(layer1.number_of_nodes, layer1.number_of_inputs_per_node, new_weights2)
+            new_layer1 = NeuralLayer(layer1.number_of_nodes, layer1.number_of_inputs_per_node, new_weights1, layer1.bias)
+            new_layer2 = NeuralLayer(layer1.number_of_nodes, layer1.number_of_inputs_per_node, new_weights2, layer2.bias)
 
 
             children_networks[0].layers.append(new_layer1)
             children_networks[1].layers.append(new_layer2)
-        
+
         for child_network in children_networks:
             for layer in child_network.layers:
                 layer.synaptic_weights = reshape(layer.synaptic_weights, (layer.number_of_inputs_per_node, layer.number_of_nodes))
-        
         return children_networks

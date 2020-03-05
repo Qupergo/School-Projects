@@ -1,13 +1,15 @@
 from snake import Snake
 from numpy import random
-
+generator = random.default_rng()
 
 class Population:
-    def __init__(self, size, population=[]):
+    def __init__(self, size, board_size, population=[]):
+        self.board_size = board_size
         self.size = size
         self.count = 0
 
-        self.population = [Snake() for i in range(size)]
+        self.population = [Snake(self.board_size) for i in range(size)]
+        self.pop_fitness = 0
     
     def update_snakes(self):
         for snake in self.population:
@@ -18,8 +20,13 @@ class Population:
     def natural_selection(self):
         new_snakes = []
         
-        #First child of new array is the best snake of previous generation without mutation
-        new_snakes.append(self.select_best_snake())
+        # First child of new array is the best snake of previous generation without mutation
+        best_snake = self.select_best_snake()
+
+        # Create new snake with previous snakes brain to remove move history and such
+        new_best_snake = Snake(self.board_size, best_snake.brain)
+
+        new_snakes.append(new_best_snake)
 
         crossing_snakes = True
 
@@ -30,7 +37,6 @@ class Population:
             parent2 = self.select_snake()
 
             children = parent1.crossover(parent2)
-
             for child in children:
                 if len(new_snakes) < amount_of_snakes:
                     child.mutate()
@@ -38,11 +44,14 @@ class Population:
                 else:
                     crossing_snakes = False
                     break
+
         self.population = new_snakes
 
     def calc_fitness(self):
+        self.pop_fitness = 0
         for snake in self.population:
             snake.calc_fitness()
+            self.pop_fitness += snake.fitness 
         
     def is_alive(self):
         for snake in self.population:
@@ -51,11 +60,11 @@ class Population:
         return False
 
     def select_snake(self):
-        #Select a random snake from the amount of fitness from each snake
-        #Since fitness is exponential it will pick the ones with higher fitness more often than not
-        #Creates genetic diversity
-        fitness_sum = sum([snake.fitness for snake in self.population])
-        rand = random.randint(fitness_sum)
+        # Select a random snake from the amount of fitness from each snake
+        # Since fitness is exponential it will pick the ones with higher fitness more often than not
+        # Creates genetic diversity
+
+        rand = random.randint(0, self.pop_fitness)
 
         running_sum = 0
 
@@ -64,6 +73,9 @@ class Population:
             if rand <= running_sum:
                 return snake
 
+    def get_random_snake(self):
+        return self.population[random.randint(0, len(self.population))]
+
     def select_best_snake(self):
         best_snake = self.population[0]
         for snake in self.population:
@@ -71,3 +83,10 @@ class Population:
                 best_snake = snake
         return best_snake
 
+    def average_fitness(self):
+        total = 0
+        for snake in self.population:
+            total += snake.fitness
+
+        total /= len(self.population)
+        return total

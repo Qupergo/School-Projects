@@ -6,6 +6,7 @@ from numpy import random, exp, dot, where, concatenate, reshape
 from math import sqrt
 from random import randint
 
+
 logging.basicConfig()
 
 mutation_chance = 0.4
@@ -17,7 +18,7 @@ class NeuralLayer():
         if synaptic_weights:
             self.synaptic_weights = synaptic_weights
         else:
-            self.synaptic_weights = 2 * random.random((number_of_inputs_per_node, number_of_nodes)) - 1
+            self.synaptic_weights = 2 * random.randn((number_of_inputs_per_node, number_of_nodes)) - 1
     
 
 class NeuralNetwork():
