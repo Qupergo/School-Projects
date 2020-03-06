@@ -14,6 +14,8 @@ class Snake():
             self.brain = brain
         self.direction = "up"
 
+        self.death_cause = "None"
+
         self.board_size = board_size
         self.pos_x = self.board_size//2
         self.pos_y = self.board_size//2
@@ -34,7 +36,9 @@ class Snake():
             ]
 
         self.vector = []
-        self.left_to_live = 100
+
+        self.left_to_live = 200
+
         #Make moves equal tail and then append current head position to it
         self.parts = [
             [self.pos_x, self.pos_y - 4],
@@ -60,6 +64,7 @@ class Snake():
 
         if self.left_to_live <= 0:
             self.alive = False
+            self.death_cause = "timeout"
             world.timeout += 1
 
         if self.direction == "up":
@@ -76,14 +81,15 @@ class Snake():
 
         if self.pos_x == self.food.pos_x and self.pos_y == self.food.pos_y:
             self.eat()
-            self.fitness += 10
 
         if [self.pos_x, self.pos_y] in self.tail:
             self.alive = False
+            self.death_cause = "ranIntoSelf"
             world.ranIntoSelf += 1
 
         if self.pos_x >= self.board_size or self.pos_y >= self.board_size or self.pos_x < 0 or self.pos_y < 0:
             self.alive = False
+            self.death_cause = "wallCrash"
             world.wallCrash += 1
 
         if self.alive:
@@ -112,9 +118,6 @@ class Snake():
 
     def eat(self):
         self.length += 1
-        if self.length > 6:
-            print(f"Length of a snake is {self.length}")
-        
         #Append tail so this part is removed instead of actual tail
         self.tail.append([-1,-1])
 
@@ -123,7 +126,12 @@ class Snake():
         self.food.respawn()
     
     def calc_fitness(self):
-        self.fitness = math.floor(self.lifetime * self.lifetime * math.floor(self.length)**2)
+        self.fitness = math.floor(self.lifetime * self.lifetime * math.floor(self.length)**2)*3
+        
+        self.fitness *= self.length - 4
+
+
+
         # self.fitness = self.lifetime**2 + self.length**2
         
         return self.fitness
@@ -187,7 +195,7 @@ class Snake():
         # RIGHT
         # Find the closest part that is to the right of the current x pos and on the same y pos
 
-        distances[1][3] = min([part[0] - self.pos_x for part in self.tail if self.pos_x < part[0] and self.pos_x == part[0]] + [base_value])
+        distances[1][3] = min([part[0] - self.pos_x for part in self.tail if self.pos_x < part[0] and self.pos_y == part[1]] + [base_value])
 
 
         # Diagonals

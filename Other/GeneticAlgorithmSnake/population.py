@@ -1,5 +1,5 @@
 from snake import Snake
-from numpy import random
+from numpy import random, array
 generator = random.default_rng()
 
 class Population:
@@ -30,15 +30,18 @@ class Population:
 
         crossing_snakes = True
 
-        amount_of_snakes = len(self.population)
-
+        parents = self.select_mating_pool(int(len(self.population)) + 1)
+        index = 0
         while crossing_snakes:
-            parent1 = self.select_snake()
-            parent2 = self.select_snake()
+            parent1 = parents[index]
+            index += 1
+
+            parent2 = parents[index]
+            index += 1
 
             children = parent1.crossover(parent2)
             for child in children:
-                if len(new_snakes) < amount_of_snakes:
+                if len(new_snakes) < self.size:
                     child.mutate()
                     new_snakes.append(child)
                 else:
@@ -53,17 +56,38 @@ class Population:
             snake.calc_fitness()
             self.pop_fitness += snake.fitness 
         
-    def is_alive(self):
+    def is_alive(self,):
         for snake in self.population:
             if snake.alive:
                 return True
         return False
 
+
+    def select_mating_pool(self, num_of_parents):
+        
+        # Select a random snake with higher probability for snakes with high fitness
+        spread = .95
+
+        self.population.sort(key=lambda x:x.fitness)
+
+        probabilities = []
+        for index, _ in enumerate(self.population):
+            probabilities.append((spread**index))
+
+        probabilities = array(probabilities)/sum(probabilities)
+
+        return random.choice(self.population, num_of_parents, p=probabilities)
+
+
+
     def select_snake(self):
+
+
+
         # Select a random snake from the amount of fitness from each snake
         # Since fitness is exponential it will pick the ones with higher fitness more often than not
         # Creates genetic diversity
-
+        
         rand = random.randint(0, self.pop_fitness)
 
         running_sum = 0
@@ -72,6 +96,7 @@ class Population:
             running_sum += snake.fitness
             if rand <= running_sum:
                 return snake
+        
 
     def get_random_snake(self):
         return self.population[random.randint(0, len(self.population))]

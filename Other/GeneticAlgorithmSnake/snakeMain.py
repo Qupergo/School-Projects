@@ -10,7 +10,7 @@ def main():
         world = World(30, 1, 1)
         world.unit_test()
     else:
-        world = World(50, 1, 500)
+        world = World(50, 1, 1000)
         while True:
             if world.make_moves():
                 continue

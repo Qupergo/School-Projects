@@ -5,6 +5,7 @@ import time
 timeout = 0
 ranIntoSelf = 0
 wallCrash = 0
+snakesOverLength7 = 0
 
 class World():
     def __init__(self, board_size, population_amount, pop_size):
@@ -19,11 +20,15 @@ class World():
         test_snake = self.species[0].get_random_snake()
 
         # First test if snake.look() works
-        for i in range(80):
+        while True:
             test_snake.think()
 
             print("Snake is going to move " + test_snake.direction)
+            test_snake.direction = input("Direction: ").lower()
+            
             test_snake.move()
+
+            
 
             look_output = test_snake.look()
 
@@ -39,7 +44,6 @@ class World():
 
 
             self.display_board(test_snake.tail, [test_snake.pos_x, test_snake.pos_y], [test_snake.food.pos_x, test_snake.food.pos_y])
-            input()
         
         # Make sure mutation works
         old = np.copy(test_snake.brain.layers[0].synaptic_weights)
@@ -103,6 +107,7 @@ class World():
             print()
             print("The best snake survived " + str(best_snake.lifetime) + " cycles")
             print("And collected " + str(best_snake.length - 5) + " food")
+            print("Death Cause: " + best_snake.death_cause)
 
             self.genetic_algorithm()
 
