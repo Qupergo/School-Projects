@@ -10,14 +10,20 @@ def main():
         world = World(30, 1, 1)
         world.unit_test()
     else:
+        with open("species.json", "w") as speciesFile:
+            speciesFile.write("{}")
         world = World(50, 1, 1000)
         while True:
             if world.make_moves():
                 continue
             else:
-                current_generation = {f"generation{world.generation}": [best_snake.move_history for best_snake in world.best_snakes()]}
+                generations = {}
+                with open("species.json", "r") as speciesFile:
+                    generations = json.load(speciesFile)
+                    generations[f"generation{world.generation}"] = world.current_generation_best_move_history[f"generation{world.generation}"]
+
                 with open("species.json", "w") as speciesFile:
-                    json.dump(current_generation, speciesFile, indent=4)
+                    json.dump(generations, speciesFile, indent=4)
 
 
 
@@ -27,7 +33,7 @@ def main():
 
 
 
-main()
+#main()
 
-#cProfile.run("main()", sort="cumtime")
+cProfile.run("main()", sort="cumtime")
 

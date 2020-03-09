@@ -3,7 +3,7 @@ generator = random.default_rng()
 from sklearn import preprocessing
 scaler = preprocessing.StandardScaler()
 
-globalMutationChance = 0.05
+globalMutationChance = 0.02
 print(globalMutationChance)
 
 class NeuralLayer():
@@ -28,7 +28,7 @@ class NeuralNetwork():
         return 1 / (1 + exp(-x))
     
     def think(self, inputs):
-        inputs = preprocessing.normalize(inputs)
+        #inputs = preprocessing.normalize(inputs)
         outputs = []
         for count, layer in enumerate(self.layers):
             if count == 0:

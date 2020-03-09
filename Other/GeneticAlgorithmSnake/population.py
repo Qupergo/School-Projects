@@ -66,9 +66,9 @@ class Population:
     def select_mating_pool(self, num_of_parents):
         
         # Select a random snake with higher probability for snakes with high fitness
-        spread = .95
+        spread = .97
 
-        self.population.sort(key=lambda x:x.fitness)
+        self.population.sort(key=lambda x:x.fitness, reverse=True)
 
         probabilities = []
         for index, _ in enumerate(self.population):
@@ -103,6 +103,7 @@ class Population:
 
     def select_best_snake(self):
         best_snake = self.population[0]
+        
         for snake in self.population:
             if snake.fitness > best_snake.fitness:
                 best_snake = snake

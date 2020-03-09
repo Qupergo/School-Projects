@@ -14,6 +14,12 @@ class Snake():
             self.brain = brain
         self.direction = "up"
 
+
+
+        # TODO: Grow the snake by this value each time it picks up food
+        self.growcountDefault = 3
+        self.growcount = self.growcountDefault
+
         self.death_cause = "None"
 
         self.board_size = board_size
@@ -37,7 +43,8 @@ class Snake():
 
         self.vector = []
 
-        self.left_to_live = 200
+        self.left_to_live_start = 200
+        self.left_to_live = self.left_to_live_start
 
         #Make moves equal tail and then append current head position to it
         self.parts = [
@@ -49,7 +56,7 @@ class Snake():
             ]
 
         # Add food positions and lengths for each move
-        self.move_history = {"moves":self.parts, "food_position":[[self.food.pos_x, self.food.pos_y] for i in range(len(self.parts))], "length":[self.length for i in range(len(self.parts))] }
+        self.move_history = {"fitness":self.fitness, "moves":self.parts, "food_position":[[self.food.pos_x, self.food.pos_y] for i in range(len(self.parts))], "length":[self.length for i in range(len(self.parts))] }
 
     
     def think(self):
@@ -81,6 +88,8 @@ class Snake():
 
         if self.pos_x == self.food.pos_x and self.pos_y == self.food.pos_y:
             self.eat()
+            while([self.food.pos_x, self.food.pos_y] in self.tail):
+                self.food.respawn()
 
         if [self.pos_x, self.pos_y] in self.tail:
             self.alive = False
@@ -121,24 +130,19 @@ class Snake():
         #Append tail so this part is removed instead of actual tail
         self.tail.append([-1,-1])
 
-        self.left_to_live = 100
+        self.left_to_live = self.left_to_live_start
 
         self.food.respawn()
     
     def calc_fitness(self):
-        self.fitness = math.floor(self.lifetime * self.lifetime * math.floor(self.length)**2)*3
-        
-        self.fitness *= self.length - 4
-
-
-
-        # self.fitness = self.lifetime**2 + self.length**2
+        self.fitness = math.floor(self.lifetime * self.lifetime * 3**math.floor(self.length))
+        self.move_history["fitness"] = self.fitness
         
         return self.fitness
 
         
     def look(self):
-        base_value = 99
+        base_value = 99999
 
         distances = [
             [base_value, base_value, base_value, base_value, base_value, base_value, base_value, base_value],
@@ -147,27 +151,45 @@ class Snake():
         ]
 
 
+        ###### DEPRECATED ######### Wall and Tail combined into one
         # Check distance to the walls
         # These are the first 8 distances
 
         # UP
         # Top wall position is 0, so the y postion should be the distance
-        distances[0][0] = self.pos_y
+        #distances[0][0] = self.pos_y
 
         # DOWN
         # Bottom wall position is the board size, so the distance should be board size - current position
-        distances[0][1] = self.board_size - self.pos_y
+        #distances[0][1] = self.board_size - self.pos_y
 
         # LEFT
         # Left wall is 0, so the x postion should be the distance
-        distances[0][2] = self.pos_x
+        #distances[0][2] = self.pos_x
 
         # RIGHT
         # Right wall is board size, so the distance should be board size - current position
-        distances[0][3] = self.board_size - self.pos_x
+        #distances[0][3] = self.board_size - self.pos_x
+        ###### DEPRECATED #########
 
         # DOWN-LEFT
+        #TEST, SHOW DIRECTION OF FOOD
 
+        # self.x < food_x = food is to the right
+        # self.x > food_x = food is left
+        # self.y < food_y = food is below
+        # self.y > food_y = food is above
+        if self.pos_x < self.food.pos_x and self.pos_y < self.food.pos_y:
+            distances[0] = [2 for i in range(len(distances[0]))]
+
+        if self.pos_x > self.food.pos_x and self.pos_y < self.food.pos_y:
+            distances[0] = [4 for i in range(len(distances[0]))]
+
+        if self.pos_x < self.food.pos_x and self.pos_y > self.food.pos_y:
+            distances[0] = [8 for i in range(len(distances[0]))]
+
+        if self.pos_x > self.food.pos_x and self.pos_y > self.food.pos_y:
+            distances[0] = [10 for i in range(len(distances[0]))]
         # DOWN-RIGHT
 
         # UP-LEFT
@@ -175,27 +197,38 @@ class Snake():
         # UP-RIGHT
 
 
-        # Check distance to tail
+        # Check distance to an obstacle (Wall and Tail)
         # These are the second 8 distances
 
         # UP
         # Find the closest distance of the parts that is above the current y position and is on the same x pos
         distances[1][0] = min([self.pos_y - part[1] for part in self.tail if self.pos_y > part[1] and self.pos_x == part[0]] + [base_value])
 
+        # Wall
+        distances[1][0] = min(self.pos_y, distances[1][0])
+
         # DOWN
         # Find the closest part that is below the current y position and is on the same x pos
 
         distances[1][1] = min([part[1] - self.pos_y for part in self.tail if self.pos_y < part[1] and self.pos_x == part[0]] + [base_value])
+         # Wall
+        distances[1][1] = min(self.board_size - self.pos_y, distances[1][1])
+
 
         # LEFT
         # Find the closest part that is to the left of the current x pos and on the same y pos
 
         distances[1][2] = min([self.pos_x - part[0] for part in self.tail if self.pos_x > part[0] and self.pos_y == part[1]] + [base_value])
+        # Wall
+        distances[1][2] = min(self.pos_x, distances[1][2])
 
         # RIGHT
         # Find the closest part that is to the right of the current x pos and on the same y pos
 
         distances[1][3] = min([part[0] - self.pos_x for part in self.tail if self.pos_x < part[0] and self.pos_y == part[1]] + [base_value])
+        # Wall
+        distances[1][3] = min(self.board_size - self.pos_x, distances[1][3])
+
 
 
         # Diagonals

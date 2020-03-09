@@ -13,6 +13,9 @@ class World():
         self.pop_size = pop_size
         self.population_amount = population_amount
         self.generation = 0
+
+        self.current_generation_best_move_history = {}
+
         self.species = [Population(pop_size, board_size) for i in range(population_amount)]
 
     def unit_test(self):
@@ -85,6 +88,11 @@ class World():
                 population.update_snakes()
 
         if not self.is_alive():
+
+            self.generation += 1
+
+            self.current_generation_best_move_history = {f"generation{self.generation}":  [{"Snake #" + str(count+1):snake.move_history} for count, snake in enumerate(self.best_snakes())]}
+
             print("Ran into self: " + str(ranIntoSelf))
             print("Wall Crashes: " + str(wallCrash))
             print("Timeout: " + str(timeout))
@@ -93,7 +101,6 @@ class World():
             wallCrash = 0
             timeout = 0
 
-            self.generation += 1
             print(f"\n\nCurrent generation is: {self.generation}")
 
             self.calc_fitness()
@@ -113,7 +120,7 @@ class World():
 
             # Display the best snake
             show_snake = True
-            if show_snake and self.generation % 50 == 0:
+            if show_snake and self.generation % 10 == 0:
                 moves = best_snake.move_history["moves"]
                 food_positions = best_snake.move_history["food_position"]
                 length = best_snake.move_history["length"]
@@ -193,3 +200,13 @@ class World():
     def calc_fitness(self):
         for population in self.species:
             population.calc_fitness()
+
+    def all_snakes(self, sort=True):
+
+        snakes = []
+        for pop in self.species:
+            snakes += pop.population
+            
+        if sort:
+            snakes.sort(key=lambda x:x.fitness, reverse=True)
+        return snakes
